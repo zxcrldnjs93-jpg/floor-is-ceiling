@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>랜딩톤 스크롤 모션 프로토타입</title>
+  <link rel="stylesheet" href="motion.css">
+  <script defer src="engine.js"></script>
+  <script defer src="demo.js"></script>
+  <style>
+    :root {
+      color-scheme: light;
+      font: 100% / 1.5 system-ui, sans-serif;
+      color: #202121;
+      background: #fafaf8;
+      --gutter: clamp(1rem, 5vw, 4rem);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    body, h1, h2, p { margin: 0; }
+    a { color: inherit; }
+    button { font: inherit; }
+
+    .intro, .outro, .panel {
+      padding: clamp(1.25rem, 5vmin, 4rem) var(--gutter);
+    }
+
+    .intro {
+      min-block-size: 65svh;
+      display: grid;
+      align-content: center;
+      justify-items: start;
+      gap: 0.75rem;
+    }
+
+    .intro h1 { font-size: clamp(2rem, 6vw, 4rem); line-height: 1.15; }
+    .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem 1rem; }
+    .controls button { padding: 0.3rem 0.7rem; }
+
+    .panel {
+      display: grid;
+      place-items: center;
+      border-block-start: 1px solid #bcbebb;
+      background: #fafaf8;
+    }
+
+    .panel-layout {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-items: center;
+      gap: clamp(1rem, 4vw, 3rem);
+      inline-size: min(100%, 64rem);
+    }
+
+    .copy { display: grid; gap: 0.5rem; }
+    .copy h2 { font-size: clamp(1.65rem, 4.4vw, 3.2rem); line-height: 1.2; }
+
+    .figure {
+      display: block;
+      inline-size: min(100%, 28rem);
+      max-block-size: 45svh;
+      margin-inline: auto;
+      overflow: visible;
+    }
+
+    .figure path { fill: none; stroke: currentColor; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+    .figure .guide { stroke: #949793; stroke-width: 2; }
+
+    .signal {
+      display: grid;
+      justify-items: center;
+      align-content: center;
+      min-block-size: min(30svh, 12rem);
+      padding: 0.65rem;
+      text-align: center;
+      border: 1px solid #787b78;
+    }
+
+    .counter { font-size: clamp(2.4rem, 8vw, 6rem); line-height: 1; }
+    .chip { min-block-size: 2rem; padding: 0.25rem; }
+    .chip span { display: inline-block; padding-inline: 0.5em; border: 1px solid currentColor; }
+    .outro { min-block-size: max(9rem, calc(100lvh - 100svh)); }
+
+    @media (max-width: 36rem) and (orientation: portrait) {
+      .panel-layout { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="intro" id="intro">
+      <h1>스크롤 모션 프로토타입</h1>
+      <p>아래로 내려 경로와 숫자의 변화를 확인하세요. 위로 돌리면 장면도 되감깁니다.</p>
+      <div class="controls">
+        <a href="#line">첫 장면으로</a>
+        <button type="button" id="switch-driver" hidden>JS 대체 사용</button>
+        <span id="driver" role="status"></span>
+      </div>
+    </header>
+
+    <section class="lt-motion-scene" id="line" aria-labelledby="line-title">
+      <div class="lt-motion-sticky panel" data-motion-sticky>
+        <div class="panel-layout">
+          <div class="copy">
+            <h2 id="line-title">선이 길을 잇습니다</h2>
+            <p id="line-caption">선을 그리면 네 꼭짓점이 다른 모양으로 바뀝니다.</p>
+          </div>
+          <svg class="figure" viewBox="0 0 320 176" role="img" aria-labelledby="figure-title">
+            <title id="figure-title">두 점을 잇는 곡선과 사각형에서 마름모로 변하는 도형</title>
+            <circle cx="16" cy="88" r="5" fill="currentColor"/>
+            <path id="draw" class="guide" d="M 16 88 C 64 88 50 27 110 27 C 170 27 140 88 192 88"/>
+            <path id="morph" d="M 192 44 L 280 44 L 280 132 L 192 132 Z"/>
+            <circle cx="306" cy="88" r="5" fill="currentColor"/>
+          </svg>
+        </div>
+      </div>
+    </section>
+
+    <section class="lt-motion-scene" id="signal" aria-labelledby="signal-title">
+      <div class="lt-motion-sticky panel" data-motion-sticky>
+        <div class="panel-layout">
+          <div class="copy">
+            <h2 id="signal-title">진행률이 신호를 보냅니다</h2>
+            <p>이 장면의 60%에서 물리 엔진에 넘길 신호가 발생합니다. 데모는 신호가 오면 표식을 붙입니다.</p>
+          </div>
+          <div class="signal">
+            <span class="counter" id="counter">100</span>
+            <div id="chip" class="chip"></div>
+            <p id="signal-status">장면 진행률 60%에서 신호</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="outro"><a href="#intro">처음으로</a></footer>
+  </main>
+</body>
+</html>

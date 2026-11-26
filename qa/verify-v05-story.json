@@ -1,0 +1,261 @@
+{
+  "cases": [
+    {
+      "name": "320×568 입력 0의 S6 안내·요약·입장별 행동",
+      "viewport": {"width":320,"height":568,"mobile":true},
+      "cues": [
+        {"at":0,"expect":{"state":"v05-preview"}},
+        {"at":0.15,"scroll":{"scene":"s2","progress":0.35,"seconds":0}},
+        {"at":0.2,"expect":{"state":"v04-s2-reference","wait":4}},
+        {"at":0.25,"scroll":{"scene":"s4","progress":0.2,"seconds":0}},
+        {"at":0.5,"scroll":{"scene":"s4","progress":0.65,"seconds":1.1}},
+        {"at":2.2,"expect":{"state":"inverted"}},
+        {"at":2.3,"scroll":{"scene":"s4","progress":0.97,"seconds":1.25}},
+        {"at":5.95,"expect":{"state":"upright"}},
+        {"at":7.05,"scroll":{"scene":"s6","progress":0,"seconds":0}},
+        {"at":7.15,"reveal":"#s6 [data-result-empty]"},
+        {"at":7.15,"expect":{"state":"v05-s6-empty","wait":4,"seenFlip":true}},
+        {"at":7.15,"snapshot":"s6-empty"},
+        {"at":7.15,"reveal":"#s6 .recap"},
+        {"at":7.15,"expect":{"state":"v05-s6-summary","wait":4,"compared":false}},
+        {"at":7.15,"snapshot":"s6-summary-before"},
+        {"at":7.15,"reveal":"#s6 .next"},
+        {"at":7.15,"expect":{"state":"v05-s6-actions","wait":4}},
+        {"at":7.15,"snapshot":"s6-actions"},
+        {"at":7.15,"reveal":"#s6 [data-result-empty] a[href=\"#s0\"]"},
+        {"at":7.15,"click":["#s6 [data-result-empty] a[href=\"#s0\"]"]},
+        {"at":7.15,"expect":{"state":"v05-s0-revisit","wait":5}},
+        {"at":7.15,"snapshot":"s0-revisit"},
+        {"at":7.15,"click":["#s0 button[data-action=\"drop\"]"]},
+        {"at":7.15,"expect":{"state":"v04-s0-recorded","wait":4}},
+        {"at":8.75,"scroll":{"scene":"s2","progress":0.35,"seconds":0}},
+        {"at":8.8,"expect":{"state":"v04-s2-same-event","sequence":1,"wait":4}},
+        {"at":8.8,"snapshot":"s2-own-after-empty"},
+        {"at":9.1,"scroll":{"scene":"s6","progress":0,"seconds":0}},
+        {"at":9.2,"expect":{"state":"v05-s6-done","wait":4,"seenFlip":true}},
+        {"at":9.2,"snapshot":"s6-done"}
+      ]
+    },
+    {
+      "name": "390×844 S6 직행 뒤 위치 유지와 입력 0 안내·요약·입장별 행동",
+      "viewport": {"width":390,"height":844,"mobile":true},
+      "cues": [
+        {"at":0.25,"watch":"v05-s6-link-position"},
+        {"at":0.25,"scroll":{"scene":"s6","progress":0,"seconds":0}},
+        {"at":0.25,"expect":{"state":"v05-s6-link-stable","wait":4}},
+        {"at":0.35,"reveal":"#s6 [data-result-empty]"},
+        {"at":0.35,"expect":{"state":"v05-s6-empty","wait":4}},
+        {"at":0.35,"snapshot":"s6-empty"},
+        {"at":0.35,"reveal":"#s6 .recap"},
+        {"at":0.35,"expect":{"state":"v05-s6-summary","wait":4,"compared":false}},
+        {"at":0.35,"snapshot":"s6-summary-before"},
+        {"at":0.35,"reveal":"#s6 .next"},
+        {"at":0.35,"expect":{"state":"v05-s6-actions","wait":4}},
+        {"at":0.35,"snapshot":"s6-actions"},
+        {"at":0.35,"reveal":"#s6 [data-recap=\"mat\"] a[href=\"#s5\"]"},
+        {"at":0.35,"click":["#s6 [data-recap=\"mat\"] a[href=\"#s5\"]"]},
+        {"at":0.35,"expect":{"state":"v04-mat-ready","wait":5,"heightSource":"reference","focused":"mat-before"}},
+        {"at":0.35,"snapshot":"s5-focus-from-summary"}
+      ]
+    },
+    {
+      "name": "1280×720 입력 0의 S6 안내·요약·입장별 행동",
+      "viewport": {"width":1280,"height":720},
+      "cues": [
+        {"at":0.25,"scroll":{"scene":"s6","progress":0,"seconds":0}},
+        {"at":0.35,"expect":{"state":"v04-s6-flip-visible","wait":4}},
+        {"at":0.35,"reveal":"#s6 [data-result-empty]"},
+        {"at":0.35,"expect":{"state":"v05-s6-empty","wait":4}},
+        {"at":0.35,"snapshot":"s6-empty"},
+        {"at":0.35,"reveal":"#s6 .recap"},
+        {"at":0.35,"expect":{"state":"v05-s6-summary","wait":4,"compared":false}},
+        {"at":0.35,"snapshot":"s6-summary-before"},
+        {"at":0.35,"reveal":"#s6 .next"},
+        {"at":0.35,"expect":{"state":"v05-s6-actions","wait":4}},
+        {"at":0.35,"snapshot":"s6-actions"}
+      ]
+    },
+    {
+      "name": "844×390 입력 0의 S6 안내·요약·입장별 행동",
+      "viewport": {"width":844,"height":390,"mobile":true},
+      "cues": [
+        {"at":0.25,"scroll":{"scene":"s6","progress":0,"seconds":0}},
+        {"at":0.35,"reveal":"#s6 [data-result-empty]"},
+        {"at":0.35,"expect":{"state":"v05-s6-empty","wait":4}},
+        {"at":0.35,"snapshot":"s6-empty"},
+        {"at":0.35,"reveal":"#s6 .recap"},
+        {"at":0.35,"expect":{"state":"v05-s6-summary","wait":4,"compared":false}},
+        {"at":0.35,"snapshot":"s6-summary-before"},
+        {"at":0.35,"reveal":"#s6 .next"},
+        {"at":0.35,"expect":{"state":"v05-s6-actions","wait":4}},
+        {"at":0.35,"snapshot":"s6-actions"}
+      ]
+    },
+    {
+      "name": "1440×900 입력 0의 S6 안내·요약·입장별 행동",
+      "viewport": {"width":1440,"height":900},
+      "cues": [
+        {"at":0.25,"scroll":{"scene":"s6","progress":0,"seconds":0}},
+        {"at":0.35,"expect":{"state":"v04-s6-flip-visible","wait":4}},
+        {"at":0.35,"reveal":"#s6 [data-result-empty]"},
+        {"at":0.35,"expect":{"state":"v05-s6-empty","wait":4}},
+        {"at":0.35,"snapshot":"s6-empty"},
+        {"at":0.35,"reveal":"#s6 .recap"},
+        {"at":0.35,"expect":{"state":"v05-s6-summary","wait":4,"compared":false}},
+        {"at":0.35,"snapshot":"s6-summary-before"},
+        {"at":0.35,"reveal":"#s6 .next"},
+        {"at":0.35,"expect":{"state":"v05-s6-actions","wait":4}},
+        {"at":0.35,"snapshot":"s6-actions"}
+      ]
+    },
+    {
+      "name": "320×568 S4 설명 뒤 6층 의자 충격 한 번",
+      "viewport": {"width":320,"height":568,"mobile":true},
+      "cues": [
+        {"at":0.25,"scroll":{"scene":"s4","progress":0.2,"seconds":0}},
+        {"at":0.5,"watch":"v05-s4"},
+        {"at":0.6,"snapshot":"s4-before"},
+        {"at":0.85,"click":["#s4 [data-action=\"flip\"]"]},
+        {"at":0.85,"expect":{"state":"v05-s4-listen","wait":5}},
+        {"at":0.85,"snapshot":"s4-listening"},
+        {"at":0.85,"expect":{"state":"v05-s4-impact","wait":3}},
+        {"at":0.85,"snapshot":"s4-chair-impact"},
+        {"at":0.85,"expect":{"state":"v05-s4-single","wait":4}}
+      ]
+    },
+    {
+      "name": "390×844 S4 설명 뒤 6층 의자 충격 한 번",
+      "viewport": {"width":390,"height":844,"mobile":true},
+      "cues": [
+        {"at":0.25,"scroll":{"scene":"s4","progress":0.2,"seconds":0}},
+        {"at":0.5,"watch":"v05-s4"},
+        {"at":0.6,"snapshot":"s4-before"},
+        {"at":0.85,"click":["#s4 [data-action=\"flip\"]"]},
+        {"at":0.85,"expect":{"state":"v05-s4-listen","wait":5}},
+        {"at":0.85,"snapshot":"s4-listening"},
+        {"at":0.85,"expect":{"state":"v05-s4-impact","wait":3}},
+        {"at":0.85,"snapshot":"s4-chair-impact"},
+        {"at":0.85,"expect":{"state":"v05-s4-single","wait":4}}
+      ]
+    },
+    {
+      "name": "1280×720 S4 설명 뒤 6층 의자 충격 한 번",
+      "viewport": {"width":1280,"height":720},
+      "cues": [
+        {"at":0.25,"scroll":{"scene":"s4","progress":0.2,"seconds":0}},
+        {"at":0.5,"watch":"v05-s4"},
+        {"at":0.6,"snapshot":"s4-before"},
+        {"at":0.85,"click":["#s4 [data-action=\"flip\"]"]},
+        {"at":0.85,"expect":{"state":"v05-s4-listen","wait":5}},
+        {"at":0.85,"snapshot":"s4-listening"},
+        {"at":0.85,"expect":{"state":"v05-s4-impact","wait":3}},
+        {"at":0.85,"snapshot":"s4-chair-impact"},
+        {"at":0.85,"expect":{"state":"v05-s4-single","wait":4}}
+      ]
+    },
+    {
+      "name": "1440×900 스크롤 반전 뒤 S4 의자 충격 한 번",
+      "viewport": {"width":1440,"height":900},
+      "cues": [
+        {"at":0.25,"scroll":{"scene":"s4","progress":0.2,"seconds":0}},
+        {"at":0.5,"watch":"v05-s4"},
+        {"at":0.6,"snapshot":"s4-before"},
+        {"at":0.85,"scroll":{"scene":"s4","progress":0.65,"seconds":1.1}},
+        {"at":0.85,"expect":{"state":"v05-s4-listen","wait":5}},
+        {"at":0.85,"snapshot":"s4-listening"},
+        {"at":0.85,"expect":{"state":"v05-s4-impact","wait":3}},
+        {"at":0.85,"snapshot":"s4-chair-impact"},
+        {"at":0.85,"expect":{"state":"v05-s4-single","wait":4}}
+      ]
+    },
+    {
+      "name": "844×390 S4 설명 뒤 6층 의자 충격 한 번",
+      "viewport": {"width":844,"height":390,"mobile":true},
+      "cues": [
+        {"at":0.25,"scroll":{"scene":"s4","progress":0.2,"seconds":0}},
+        {"at":0.5,"watch":"v05-s4"},
+        {"at":0.6,"snapshot":"s4-before"},
+        {"at":0.85,"click":["#s4 [data-action=\"flip\"]"]},
+        {"at":0.85,"expect":{"state":"v05-s4-listen","wait":5}},
+        {"at":0.85,"snapshot":"s4-listening"},
+        {"at":0.85,"expect":{"state":"v05-s4-impact","wait":3}},
+        {"at":0.85,"snapshot":"s4-chair-impact"},
+        {"at":0.85,"expect":{"state":"v05-s4-single","wait":4}}
+      ]
+    },
+    {
+      "name": "390×844 줄이기 정지 그림의 S4 설명과 의자 표지",
+      "viewport": {"width":390,"height":844,"mobile":true,"reducedMotion":true},
+      "cues": [
+        {"at":0.25,"scroll":{"scene":"s4","progress":0.2,"seconds":0}},
+        {"at":0.5,"watch":"v05-s4"},
+        {"at":0.6,"snapshot":"s4-reduced-before"},
+        {"at":0.85,"click":["#s4 [data-action=\"flip\"]"]},
+        {"at":0.85,"expect":{"state":"v05-s4-listen","wait":5}},
+        {"at":0.85,"expect":{"state":"v05-s4-impact","wait":3}},
+        {"at":0.85,"snapshot":"s4-reduced-result"},
+        {"at":0.85,"expect":{"state":"v05-s4-single","wait":4}}
+      ]
+    },
+    {
+      "name": "빨간 공 약 30에서 기준 높이 100→44와 반복·요약",
+      "viewport": {"width":390,"height":844,"mobile":true},
+      "cues": [
+        {"at":0.35,"click":["#s0 [data-physics-body=\"7:ball\"]"]},
+        {"at":1.7,"expect":{"state":"records","min":1}},
+        {"at":1.9,"scroll":{"scene":"s5","progress":0.15,"seconds":0}},
+        {"at":2,"expect":{"state":"v04-mat-ready","wait":4,"heightSource":"reference"}},
+        {"at":2,"expect":{"state":"v05-s5-low-height","wait":3}},
+        {"at":2,"snapshot":"s5-height-before"},
+        {"at":2,"click":["#s5 button[data-action=\"mat-before\"]"]},
+        {"at":2,"expect":{"state":"v04-mat-bare","wait":4,"beforeValue":100}},
+        {"at":2,"click":["#s5 button[data-action=\"mat-lay\"]"]},
+        {"at":2,"expect":{"state":"v04-mat-laid","wait":4}},
+        {"at":2,"click":["#s5 button[data-action=\"mat-after\"]"]},
+        {"at":2,"expect":{"state":"v04-mat-compared","wait":5}},
+        {"at":2,"snapshot":"s5-compared"},
+        {"at":2,"click":["#s5 button[data-action=\"mat-after\"]"]},
+        {"at":2,"expect":{"state":"v04-mat-repeated","wait":5}},
+        {"at":2,"scroll":{"scene":"s6","progress":0,"seconds":0}},
+        {"at":2.1,"expect":{"state":"v05-s6-done","wait":4}},
+        {"at":2.1,"expect":{"state":"v05-s5-low-result","wait":4}},
+        {"at":2.1,"snapshot":"s6-card-after-mat"},
+        {"at":2.1,"reveal":"#s6 .recap"},
+        {"at":2.1,"expect":{"state":"v05-s6-summary","wait":4,"compared":true}},
+        {"at":2.1,"snapshot":"s6-measured-summary"}
+      ]
+    },
+    {
+      "name": "두 낙하·5층 전달·매트 실측이 요약 3칸에 반영",
+      "viewport": {"width":390,"height":844,"mobile":true},
+      "cues": [
+        {"at":0.35,"click":["#s0 button[data-action=\"drop\"]"]},
+        {"at":0.35,"expect":{"state":"v04-s0-recorded","wait":4}},
+        {"at":1.85,"click":["#s0 button[data-action=\"drop-high\"]"]},
+        {"at":1.85,"expect":{"state":"v04-s0-recorded","count":2,"wait":4}},
+        {"at":3.45,"scroll":{"scene":"s3","progress":0,"seconds":0,"sceneProgress":true}},
+        {"at":3.55,"watch":"relay"},
+        {"at":3.65,"scroll":{"scene":"s3","progress":0.9,"seconds":1,"sceneProgress":true}},
+        {"at":6.5,"expect":{"state":"relay-visible","count":1}},
+        {"at":6.5,"snapshot":"s3-chair-before-summary"},
+        {"at":6.55,"scroll":{"scene":"s5","progress":0.15,"seconds":0}},
+        {"at":6.65,"expect":{"state":"v04-mat-ready","wait":4,"heightSource":"peak"}},
+        {"at":6.65,"snapshot":"s5-height-before"},
+        {"at":6.65,"click":["#s5 button[data-action=\"mat-before\"]"]},
+        {"at":6.65,"expect":{"state":"v04-mat-bare","wait":4,"beforeValue":200}},
+        {"at":6.65,"click":["#s5 button[data-action=\"mat-lay\"]"]},
+        {"at":6.65,"expect":{"state":"v04-mat-laid","wait":4}},
+        {"at":6.65,"click":["#s5 button[data-action=\"mat-after\"]"]},
+        {"at":6.65,"expect":{"state":"v04-mat-compared","wait":5}},
+        {"at":6.65,"snapshot":"s5-compared"},
+        {"at":6.65,"scroll":{"scene":"s6","progress":0,"seconds":0}},
+        {"at":6.75,"expect":{"state":"v05-s6-done","wait":4}},
+        {"at":6.75,"expect":{"state":"v04-mat-complete-card","wait":4,"beforeValue":200}},
+        {"at":6.75,"snapshot":"s6-card-after-mat"},
+        {"at":6.75,"reveal":"#s6 .recap"},
+        {"at":6.75,"expect":{"state":"v05-s6-summary","wait":4,"compared":true}},
+        {"at":6.75,"snapshot":"s6-measured-summary"}
+      ]
+    }
+  ]
+}

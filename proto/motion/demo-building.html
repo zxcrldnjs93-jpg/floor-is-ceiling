@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>중력을 뒤집으면 · 모션 데모</title>
+  <link rel="stylesheet" href="motion.css">
+  <link rel="stylesheet" href="building.css">
+  <script defer src="engine.js"></script>
+  <script defer src="building.js"></script>
+  <script defer src="demo-building.js"></script>
+  <style>
+    :root {
+      color-scheme: light;
+      font: 100% / 1.5 system-ui, sans-serif;
+      color: #24211c;
+      background: #f5f0e8;
+      --room-edge: clamp(0.75rem, 5vw, 4rem);
+      --ledge: clamp(1.25rem, 4vmin, 2.75rem);
+      --paper: #f5f0e8;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    body, h1, h2, p { margin: 0; }
+    button { font: inherit; }
+    [hidden] { display: none !important; }
+    .demo-descent-extended { min-block-size: calc(295svh + 80svh); }
+    .lt-building-stack { --under-slab: clamp(3rem, 17svh, 10rem); }
+
+    .room-shell {
+      position: absolute;
+      inset: var(--ledge) var(--room-edge) var(--under-slab, 0px);
+      border: 1px solid #7b7164;
+      background: var(--room-color, #f5eee3);
+    }
+
+    .room-illustration {
+      position: absolute;
+      inset-inline: 9%;
+      inset-block-end: var(--ledge);
+      inline-size: 82%;
+      block-size: min(55%, 22rem);
+      color: #615647;
+    }
+
+    .slab {
+      position: absolute;
+      inset-inline: var(--room-edge);
+      inset-block-end: var(--under-slab, 0px);
+      block-size: var(--ledge);
+      border: 1px solid #7b7164;
+      background: repeating-linear-gradient(122deg, #ddd1bd 0 4px, #ebdfcc 4px 9px);
+    }
+
+    .room-wave { inset-block-start: calc(100% - var(--under-slab) - var(--ledge) / 2); z-index: 1; }
+    .room-six { --room-color: #edece3; }
+    .room-five { --room-color: #e9eee9; }
+
+    .stage-toolbar {
+      position: absolute;
+      z-index: 3;
+      inset-block-start: calc(var(--ledge) + 0.8rem);
+      inset-inline-end: calc(var(--room-edge) + 0.75rem);
+      display: grid;
+      justify-items: end;
+      gap: 0.4rem;
+    }
+
+    .round-button {
+      min-block-size: 2.75rem;
+      padding: 0.35rem 0.7rem;
+      border: 1px solid #63594e;
+      border-radius: 0.3rem;
+      color: #25211b;
+      background: var(--paper);
+      cursor: pointer;
+    }
+
+    .impact-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; }
+    .impact-controls output { padding-inline-start: 0.2rem; }
+
+    .stage-copy {
+      position: absolute;
+      z-index: 2;
+      inset-block-start: clamp(9.35rem, 25svh, 15rem);
+      inset-inline-start: calc(var(--room-edge) + clamp(0.75rem, 3vw, 3rem));
+      margin-inline-end: calc(var(--room-edge) + 0.75rem);
+      max-inline-size: 29rem;
+      display: grid;
+      gap: 0.5rem;
+    }
+
+    .stage-copy h1, .flip-copy h2 {
+      font-size: clamp(1.55rem, 4.2vmin, 3.4rem);
+      line-height: 1.22;
+    }
+
+    .stage-copy p, .flip-copy {
+      width: fit-content;
+      background: var(--paper);
+      box-shadow: 0 0 0 0.2rem var(--paper);
+    }
+
+    .flip-section { min-block-size: 350svh; }
+    .climax-art {
+      position: absolute;
+      inset: 8% 0 24%;
+      display: grid;
+      place-items: center;
+      pointer-events: none;
+    }
+
+    .climax-art svg {
+      display: block;
+      inline-size: min(86%, 33rem);
+      block-size: 100%;
+      overflow: visible;
+      color: #615647;
+      transform-origin: 50% 83%;
+    }
+
+    #climax-live { transform-box: view-box; transform-origin: 50% 50%; }
+    .flip-control {
+      position: absolute;
+      z-index: 2;
+      inset-inline: var(--room-edge);
+      inset-block-end: calc(var(--ledge) + 0.25rem);
+      display: grid;
+      justify-items: center;
+      gap: 0.35rem;
+      text-align: center;
+    }
+
+    .climax-buttons { display: flex; justify-content: center; flex-wrap: wrap; gap: 0.35rem; }
+    .flip-status:empty { display: none; }
+    .round-button[aria-disabled="true"] { cursor: default; }
+    .round-button:focus-visible { outline: 2px solid #365e67; outline-offset: 3px; }
+
+    .cushion-panel {
+      display: grid;
+      align-content: start;
+      gap: 0.7rem;
+      padding: 1rem var(--room-edge);
+    }
+    .cushion-controls { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .cushion-mat { block-size: 0.4rem; max-inline-size: 12rem; background: #23665b; }
+    .cushion-frames { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; max-inline-size: 28rem; }
+    .cushion-frames figure { margin: 0; border: 1px solid #7b7164; padding: 0.4rem; }
+    .cushion-frames svg { display: block; inline-size: 100%; block-size: clamp(2.5rem, 9svh, 5rem); }
+    .cushion-frames .lamp { transform-origin: 50% 8%; transform-box: view-box; }
+    .cushion-bar { display: block; block-size: 0.25rem; transform-origin: left; background: currentColor; }
+
+    footer {
+      min-block-size: 100lvh;
+      padding: 2rem var(--room-edge);
+    }
+
+    @media (max-height: 450px) and (orientation: landscape) {
+      .stage-copy { inset-block-start: calc(var(--ledge) + 0.65rem); max-inline-size: calc(100% - 13rem); }
+      .stage-copy h1, .flip-copy h2 { font-size: 1.35rem; }
+      .room-illustration { inset-inline-start: 40%; inline-size: 54%; }
+      .climax-art { inset: 4% 35% 4% 0; }
+      .flip-control { inset-inline-start: 60%; }
+      .cushion-panel { block-size: auto; min-block-size: 100svh; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section id="descent" class="lt-building-descent demo-descent-extended" aria-labelledby="descent-title">
+      <div class="lt-building-stage" data-motion-sticky>
+        <div class="lt-building-viewport" id="descent-viewport" aria-hidden="true">
+          <div class="lt-building-stack" id="vertical-stack">
+            <div>
+              <div class="room-shell">
+                <svg class="room-illustration" viewBox="0 0 500 205" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M30 180h440M58 180v-53h48v-35h126v35h39v53m-199-53h187m111 53v-70m0-78v45m-46 33 16-33h60l16 33Z"/>
+                  <circle cx="303" cy="166" r="14" fill="var(--room-color, #f5eee3)"/>
+                </svg>
+              </div>
+              <div class="slab"></div>
+              <div class="lt-slab-wave-layer room-wave" data-wave="7"></div>
+            </div>
+            <div class="room-six">
+              <div class="room-shell">
+                <svg class="room-illustration" viewBox="0 0 500 205" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M30 180h440M93 180v-58h242v58M74 122h283M146 113V61h86v52m-44 0v9m185 58v-29h47v29m-47-29v-35m41 0v35M152 0v24m-30 27 13-27h34l13 27Z"/>
+                </svg>
+              </div>
+              <div class="lt-slab-wave-layer" data-wave="replay" style="inset-block-start: 2%; z-index: 1"></div>
+              <div class="slab"></div>
+              <div class="lt-slab-wave-layer room-wave" data-wave="6"></div>
+            </div>
+            <div class="room-five">
+              <div class="room-shell">
+                <svg class="room-illustration" viewBox="0 0 500 205" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M30 180h440M185 180v-57h223v57m-235-57h247v-35H173Zm44-35v35m47-35v35m47-35v35m47-35v35M70 180v-45h62v45m-63-45h65"/>
+                </svg>
+              </div>
+              <div class="slab"></div>
+              <div class="lt-slab-wave-layer room-wave" data-wave="5"></div>
+            </div>
+          </div>
+        </div>
+        <div class="stage-toolbar">
+          <div class="lt-building-led" id="floor-led" aria-hidden="true">7F</div>
+          <span id="floor-status" class="lt-motion-sr-only" role="status">7층</span>
+          <button id="pause-motion" class="round-button" type="button" aria-pressed="false" hidden>움직임 일시정지</button>
+        </div>
+        <div class="stage-copy">
+          <h1 id="descent-title">내 바닥은 누군가의 천장입니다.</h1>
+          <p id="floor-copy">여기는 7층, 당신의 집입니다. 바닥을 톡 눌러 보세요.</p>
+          <p id="intro-extension" hidden>던져도, 끌어도 됩니다. 전부 바닥에 새겨집니다.</p>
+          <div class="impact-controls" id="impact-controls" hidden>
+            <button class="round-button" type="button" data-drop="14">바닥 톡</button>
+            <button class="round-button" type="button" data-drop="48">바닥 쿵</button>
+            <output id="impact-level">쿵 지수(상대값) 0</output>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="climax" class="flip-section" aria-labelledby="flip-title">
+      <div class="lt-building-stage" data-motion-sticky>
+        <div class="lt-building-viewport" aria-hidden="true">
+          <div class="climax-art">
+            <svg id="climax-camera" viewBox="0 0 480 522" fill="#e2c699" stroke="currentColor" stroke-width="3">
+              <defs>
+                <g id="climax-shell">
+                  <rect x="3" y="3" width="474" height="516" fill="#f5eee3"/>
+                  <path d="M3 170h474v12H3ZM3 340h474v12H3Z" fill="#ddd1bd"/>
+                  <path d="M346 70h76v53h-76Zm0 170h76v53h-76Zm0 170h76v53h-76Z" fill="none"/>
+                </g>
+                <g id="climax-furnishings">
+                  <circle cx="82" cy="151" r="14"/>
+                  <rect x="153" y="103" width="49" height="62"/>
+                  <rect x="364" y="136" width="24" height="28"/>
+                  <rect x="137" y="273" width="52" height="62"/>
+                  <rect x="354" y="303" width="24" height="31"/>
+                  <rect x="309" y="464" width="34" height="48"/>
+                </g>
+              </defs>
+              <g id="climax-upright" opacity="0"><use href="#climax-shell"/><use href="#climax-furnishings"/></g>
+              <g id="climax-inverted" opacity="0" transform="rotate(180 240 261)">
+                <use href="#climax-shell"/>
+                <circle cx="138" cy="27" r="14"/>
+                <path d="M215 13h62v49h-62ZM320 13h28v24h-28ZM115 183h62v52h-62ZM265 183h31v24h-31ZM240 353h48v34h-48Z"/>
+              </g>
+              <g id="climax-settled" opacity="0">
+                <use href="#climax-shell"/>
+                <circle cx="135" cy="151" r="14"/>
+                <path d="M207 116h62v49h-62ZM322 141h28v24h-28ZM116 283h62v52h-62ZM265 311h31v24h-31ZM243 478h48v34h-48Z"/>
+              </g>
+              <g id="climax-live">
+                <use href="#climax-shell"/>
+                <g id="climax-props"><use href="#climax-furnishings"/></g>
+              </g>
+              <g id="climax-chair-marker" fill="#873d27" stroke="#873d27" hidden>
+                <path d="M0-8v16"/>
+                <circle r="4" stroke="none"/>
+                <text y="6" stroke="none" font-size="14" font-weight="700"></text>
+              </g>
+            </svg>
+          </div>
+        </div>
+        <div class="flip-control">
+          <div class="flip-copy">
+            <h2 id="flip-title">중력을 뒤집으면</h2>
+            <p id="flip-status" class="flip-status" role="status">세 집이 한 줄로 쌓여 있습니다.</p>
+          </div>
+          <div class="climax-buttons">
+            <button id="flip-gravity" class="round-button" type="button" hidden>중력 뒤집기</button>
+            <button id="pause-flip" class="round-button" type="button" aria-pressed="false" hidden>움직임 일시정지</button>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section id="cushion-demo" class="lt-building-cushion" aria-labelledby="cushion-title">
+      <div class="lt-building-stage cushion-panel" data-motion-sticky>
+        <div class="climax-buttons">
+          <div id="cushion-led" class="lt-building-led" aria-hidden="true">7F</div>
+          <button id="pause-cushion" class="round-button" type="button" aria-pressed="false" hidden>움직임 일시정지</button>
+        </div>
+        <h2 id="cushion-title">다시 7층.</h2>
+        <p id="cushion-height" hidden>방 높이의 절반에서, 공을 한 번 떨어뜨려 봅니다.</p>
+        <p id="cushion-mat-copy" hidden>같은 공, 같은 높이. 이번엔 매트 위에서.</p>
+        <p id="cushion-status" role="status">로컬 정적 미리보기에서 낙하를 비교할 수 있습니다.</p>
+        <div class="cushion-controls" id="cushion-controls" hidden>
+          <button class="round-button" type="button" data-action="mat-before">맨바닥에 떨어뜨리기</button>
+          <button class="round-button" type="button" data-action="mat-lay">매트 깔기</button>
+          <button class="round-button" type="button" data-action="mat-after">매트 위에 떨어뜨리기</button>
+        </div>
+        <div id="cushion-mat" class="cushion-mat" aria-hidden="true" hidden></div>
+        <p id="cushion-comparison" role="status" hidden></p>
+        <div class="cushion-frames" id="cushion-frames" hidden>
+          <figure>
+            <figcaption>맨바닥 · 6층 조명</figcaption>
+            <svg viewBox="0 0 100 50" aria-hidden="true"><g class="lamp" id="cushion-before-lamp"><path d="M50 4v26m-10 0h20l5 8H35Z" fill="none" stroke="currentColor"/></g></svg>
+            <span id="cushion-before-bar" class="cushion-bar" aria-hidden="true"></span>
+          </figure>
+          <figure>
+            <figcaption>매트 위 · 6층 조명</figcaption>
+            <svg viewBox="0 0 100 50" aria-hidden="true"><g class="lamp" id="cushion-after-lamp"><path d="M50 4v26m-10 0h20l5 8H35Z" fill="none" stroke="currentColor"/></g></svg>
+            <span id="cushion-after-bar" class="cushion-bar" aria-hidden="true"></span>
+          </figure>
+        </div>
+        <p id="cushion-lamp-copy" hidden>6층 조명이 덜 흔들립니다.</p>
+        <p id="cushion-conclusion" hidden>배려는 거창하지 않습니다. 매트 한 장입니다.</p>
+        <small id="cushion-provenance" hidden>이 수치는 이 페이지 물리엔진의 값입니다. 실제 매트의 효과는 제품과 소리의 종류에 따라 다릅니다.</small>
+      </div>
+    </section>
+    <footer><a href="#descent">7층으로 돌아가기</a></footer>
+  </main>
+</body>
+</html>

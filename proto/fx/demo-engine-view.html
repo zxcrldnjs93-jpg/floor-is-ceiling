@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>중력을 뒤집으면 · 물리엔진 보기</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #f3f4f0; color: #18232d; font: 1rem/1.5 system-ui, sans-serif; word-break: keep-all; }
+  main { max-width: 38rem; margin: auto; padding: 1.25rem 1rem; }
+  h1 { margin: 0; font-size: 1.7rem; }
+  p { margin: .55rem 0; }
+  .controls { display: flex; flex-wrap: wrap; gap: .45rem; margin: .85rem 0; }
+  button { min-height: 2.75rem; border: 1px solid #53626a; border-radius: .25rem; padding: .3rem .6rem; background: #fff; color: inherit; font: inherit; }
+  button[aria-pressed="true"] { background: #18232d; color: #fff; }
+  button:focus-visible { outline: 3px solid #106cb0; outline-offset: 2px; }
+  #stage { position: relative; width: min(100%, 28rem); aspect-ratio: 480 / 522; margin: 1rem auto; background: #fff; border: 1px solid #617784; }
+  [data-room] { position: absolute; inset-inline: 0; border-block: 1px solid #d5dcdf; padding: .35rem .55rem; color: #475761; }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  #status { min-height: 1.5em; }
+  footer { padding-top: .6rem; border-top: 1px solid #c8d0d3; font-size: .92rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>물리엔진 보기</h1>
+  <p>아래 토글을 켜고 7층 공을 놓아 보세요. 점은 접촉점, 주황 화살표는 물체에 작용한 법선 방향, 파랑 화살표는 충격을 받은 방을 표시합니다.</p>
+  <div class="controls">
+    <button id="drop" type="button">7층 공 떨어뜨리기</button>
+    <button id="chair" type="button">6층 의자 밀기</button>
+    <button id="flip" type="button">중력 뒤집기</button>
+    <button id="replay" type="button" disabled>6층 의자 기록 듣기</button>
+  </div>
+  <div id="stage" role="group" aria-label="7층, 6층, 5층 단면">
+    <canvas id="overlay" width="960" height="1044" hidden></canvas>
+  </div>
+  <p id="status" role="status">윗면 접촉만 이웃 방으로 전달됩니다.</p>
+  <footer id="s7">
+    <button id="toggle" type="button" aria-pressed="false">물리엔진 보기</button>
+    <p>초록 외곽선은 깨어 있는 바디, 보라 외곽선과 Z는 수면, 회색은 고정 바디입니다. 쿵 지수는 엔진의 상대값입니다.</p>
+  </footer>
+</main>
+<script type="module">
+  import { createEngineView } from "./engine-view.js";
+  import { createBuilding } from "../physics/building.js";
+  import { fixedLoop } from "../physics/browser.js";
+
+  const $ = id => document.getElementById(id);
+  const stage = $("stage"), overlay = $("overlay"), status = $("status");
+  const building = createBuilding();
+  const motion = matchMedia("(prefers-reduced-motion: reduce)");
+  const view = createEngineView(overlay, building, { button: $("toggle"), motion });
+  let chairRecorded = false;
+  for (const room of building.rooms.values()) {
+    const row = document.createElement("div");
+    row.dataset.room = String(room.id);
+    row.textContent = `${room.id}층`;
+    row.style.top = `${100 * room.top / building.height}%`;
+    row.style.height = `${100 * (room.bottom - room.top) / building.height}%`;
+    stage.prepend(row);
+  }
+
+  building.onThump(event => {
+    if (event.index && (event.face !== "top" || event.receiverRoom == null)) status.textContent = `쿵 ${event.index} · 전달 0`;
+  });
+  building.onReceive(event => {
+    if (event.slab === "6/5" && event.type === "scrape") chairRecorded = true;
+    if (event.index) status.textContent = `쿵 ${event.index} · ${event.sourceRoom}층 → ${event.receiverRoom}층`;
+  });
+
+  function render(alpha, capture = false) {
+    stage.style.transform = `rotate(${building.angle}rad)`;
+    view.render(alpha, undefined, capture);
+    $("drop").disabled = !building.canInputFor("dropBall");
+    $("chair").disabled = !building.canInputFor("nudgeChair");
+    $("replay").disabled = !building.listening || !chairRecorded;
+  }
+  function perform(handler) {
+    handler();
+    if (motion.matches) {
+      for (let frame = 0; frame < 240; frame++) building.step();
+    }
+    render(1, true);
+  }
+  $("drop").onclick = () => perform(() => building.input({ type: "dropBall", y: 26 }));
+  $("chair").onclick = () => perform(() => building.input({ type: "nudgeChair" }));
+  $("replay").onclick = () => perform(() => building.replay("chair"));
+  $("flip").onclick = () => perform(() => {
+    const turn = building.progress < 0.25 || building.progress > 0.75;
+    building.setProgress(turn ? 0.65 : 0.95);
+    $("flip").textContent = turn ? "원래대로 돌리기" : "중력 뒤집기";
+  });
+  const loop = fixedLoop(building, stage, alpha => render(alpha), {
+    dt: building.dt, onReduced: value => { view.setStill(value); },
+  });
+  window.addEventListener("pagehide", event => {
+    if (!event.persisted) { loop.destroy(); view.destroy(); }
+  });
+</script>
+</body>
+</html>

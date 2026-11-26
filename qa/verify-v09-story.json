@@ -1,0 +1,304 @@
+{
+  "cases": [
+    {
+      "name": "G1 · 1280 S0 빨간 공 뒤 높은 곳 클릭 · 묶음 표지와 눈금 간격",
+      "viewport": {"width": 1280, "height": 720},
+      "cues": [
+        {"at": 0, "expect": {"state": "v08-intro-ready", "wait": 4}},
+        {"at": 0.2, "click": ["#s0 [data-physics-body=\"7:ball\"]"]},
+        {"at": 0.2, "expect": {"state": "v08-record", "kind": "thump", "value": 30, "wait": 4}},
+        {"at": 2.2, "clickAt": {"selector": "#s0 [data-stage=\"s0\"]", "scope": "#s0 [data-stage=\"s0\"]", "room": [0.75, 0.2]}},
+        {"at": 2.2, "expect": {"state": "v09-grouped-mark", "wait": 4, "stable": 3}},
+        {"at": 2.2, "snapshot": "g1-1280-grouped-mark"}
+      ]
+    },
+    {
+      "name": "G1 · 1366 S0 빨간 공 뒤 높은 곳 클릭 · 묶음 표지와 눈금 간격",
+      "viewport": {"width": 1366, "height": 768},
+      "cues": [
+        {"at": 0, "expect": {"state": "v08-intro-ready", "wait": 4}},
+        {"at": 0.2, "click": ["#s0 [data-physics-body=\"7:ball\"]"]},
+        {"at": 0.2, "expect": {"state": "v08-record", "kind": "thump", "value": 30, "wait": 4}},
+        {"at": 2.2, "clickAt": {"selector": "#s0 [data-stage=\"s0\"]", "scope": "#s0 [data-stage=\"s0\"]", "room": [0.75, 0.2]}},
+        {"at": 2.2, "expect": {"state": "v09-grouped-mark", "wait": 4, "stable": 3}},
+        {"at": 2.2, "snapshot": "g1-1366-grouped-mark"}
+      ]
+    },
+    {
+      "name": "G1 · 1440 S0 빨간 공 뒤 높은 곳 클릭 · 묶음 표지와 눈금 간격",
+      "viewport": {"width": 1440, "height": 900},
+      "cues": [
+        {"at": 0, "expect": {"state": "v08-intro-ready", "wait": 4}},
+        {"at": 0.2, "click": ["#s0 [data-physics-body=\"7:ball\"]"]},
+        {"at": 0.2, "expect": {"state": "v08-record", "kind": "thump", "value": 30, "wait": 4}},
+        {"at": 2.2, "clickAt": {"selector": "#s0 [data-stage=\"s0\"]", "scope": "#s0 [data-stage=\"s0\"]", "room": [0.75, 0.2]}},
+        {"at": 2.2, "expect": {"state": "v09-grouped-mark", "wait": 4, "stable": 3}},
+        {"at": 2.2, "snapshot": "g1-1440-grouped-mark"}
+      ]
+    },
+    {
+      "name": "G2 · 844×390 무입력 · S4 정착의 버튼 등장과 밀림",
+      "viewport": {"width": 844, "height": 390, "mobile": true},
+      "cues": [
+        {"at": 0, "watch": "v09-layout-shifts"},
+        {"at": 0.2, "scroll": {"scene": "s4", "progress": 0.2, "seconds": 0.5, "climaxProgress": true}},
+        {"at": 0.2, "expect": {"state": "v06b-s4-ready", "wait": 4}},
+        {"at": 0.2, "scroll": {"scene": "s4", "progress": 0.62, "seconds": 0.85, "climaxProgress": true}},
+        {"at": 0.2, "expect": {"state": "v06b-s4-listening", "wait": 4, "stable": 3}},
+        {"at": 0.2, "scroll": {"scene": "s4", "progress": 0.925, "seconds": 0.75, "climaxProgress": true}},
+        {"at": 0.2, "expect": {"state": "v09-s4-return", "wait": 4, "stable": 3}},
+        {"at": 0.2, "snapshot": "g2-844-empty-return"},
+        {"at": 0.2, "scroll": {"scene": "s4", "progress": 0.975, "seconds": 0.3, "climaxProgress": true}},
+        {"at": 0.2, "expect": {"state": "v09-s4-settled", "wait": 4, "stable": 3}},
+        {"at": 3.4, "expect": {"state": "v09-s4-cls", "wait": 1, "stable": 5}},
+        {"at": 3.4, "snapshot": "g2-844-empty-settled"}
+      ]
+    },
+    {
+      "name": "G2 · 844×390 기록 있음 · S4 정착의 버튼 등장과 밀림",
+      "viewport": {"width": 844, "height": 390, "mobile": true},
+      "cues": [
+        {"at": 0, "watch": "v09-layout-shifts"},
+        {"at": 0.2, "clickAt": {"selector": "#s0 [data-stage=\"s0\"]", "scope": "#s0 [data-stage=\"s0\"]", "room": [0.75, 0.2]}},
+        {"at": 2.1, "expect": {"state": "records", "min": 1}},
+        {"at": 2.1, "click": ["#s0 [data-physics-body=\"7:ball\"]"]},
+        {"at": 3.9, "scroll": {"scene": "s4", "progress": 0.2, "seconds": 0.5, "climaxProgress": true}},
+        {"at": 3.9, "expect": {"state": "v06b-s4-ready", "wait": 4}},
+        {"at": 3.9, "scroll": {"scene": "s4", "progress": 0.62, "seconds": 0.85, "climaxProgress": true}},
+        {"at": 3.9, "expect": {"state": "v06b-s4-listening", "wait": 4, "stable": 3}},
+        {"at": 3.9, "scroll": {"scene": "s4", "progress": 0.925, "seconds": 0.75, "climaxProgress": true}},
+        {"at": 3.9, "expect": {"state": "v09-s4-return", "wait": 4, "stable": 3}},
+        {"at": 3.9, "snapshot": "g2-844-recorded-return"},
+        {"at": 3.9, "scroll": {"scene": "s4", "progress": 0.975, "seconds": 0.3, "climaxProgress": true}},
+        {"at": 3.9, "expect": {"state": "v09-s4-settled", "wait": 4, "stable": 3}},
+        {"at": 7.1, "expect": {"state": "v09-s4-cls", "wait": 1, "stable": 5}},
+        {"at": 7.1, "snapshot": "g2-844-recorded-settled"}
+      ]
+    },
+    {
+      "name": "G2 · 320×568 무입력 · S4 정착의 버튼 등장과 밀림",
+      "viewport": {"width": 320, "height": 568, "mobile": true},
+      "cues": [
+        {"at": 0, "watch": "v09-layout-shifts"},
+        {"at": 0.2, "scroll": {"scene": "s4", "progress": 0.2, "seconds": 0.5, "climaxProgress": true}},
+        {"at": 0.2, "expect": {"state": "v06b-s4-ready", "wait": 4}},
+        {"at": 0.2, "scroll": {"scene": "s4", "progress": 0.62, "seconds": 0.85, "climaxProgress": true}},
+        {"at": 0.2, "expect": {"state": "v06b-s4-listening", "wait": 4, "stable": 3}},
+        {"at": 0.2, "scroll": {"scene": "s4", "progress": 0.925, "seconds": 0.75, "climaxProgress": true}},
+        {"at": 0.2, "expect": {"state": "v09-s4-return", "wait": 4, "stable": 3}},
+        {"at": 0.2, "snapshot": "g2-320-empty-return"},
+        {"at": 0.2, "scroll": {"scene": "s4", "progress": 0.975, "seconds": 0.3, "climaxProgress": true}},
+        {"at": 0.2, "expect": {"state": "v09-s4-settled", "wait": 4, "stable": 3}},
+        {"at": 3.4, "expect": {"state": "v09-s4-cls", "wait": 1, "stable": 5}},
+        {"at": 3.4, "snapshot": "g2-320-empty-settled"}
+      ]
+    },
+    {
+      "name": "G2 · 320×568 기록 있음 · S4 정착의 버튼 등장과 밀림",
+      "viewport": {"width": 320, "height": 568, "mobile": true},
+      "cues": [
+        {"at": 0, "watch": "v09-layout-shifts"},
+        {"at": 0.2, "clickAt": {"selector": "#s0 [data-stage=\"s0\"]", "scope": "#s0 [data-stage=\"s0\"]", "room": [0.75, 0.2]}},
+        {"at": 2.1, "expect": {"state": "records", "min": 1}},
+        {"at": 2.1, "click": ["#s0 [data-physics-body=\"7:ball\"]"]},
+        {"at": 3.9, "scroll": {"scene": "s4", "progress": 0.2, "seconds": 0.5, "climaxProgress": true}},
+        {"at": 3.9, "expect": {"state": "v06b-s4-ready", "wait": 4}},
+        {"at": 3.9, "scroll": {"scene": "s4", "progress": 0.62, "seconds": 0.85, "climaxProgress": true}},
+        {"at": 3.9, "expect": {"state": "v06b-s4-listening", "wait": 4, "stable": 3}},
+        {"at": 3.9, "scroll": {"scene": "s4", "progress": 0.925, "seconds": 0.75, "climaxProgress": true}},
+        {"at": 3.9, "expect": {"state": "v09-s4-return", "wait": 4, "stable": 3}},
+        {"at": 3.9, "snapshot": "g2-320-recorded-return"},
+        {"at": 3.9, "scroll": {"scene": "s4", "progress": 0.975, "seconds": 0.3, "climaxProgress": true}},
+        {"at": 3.9, "expect": {"state": "v09-s4-settled", "wait": 4, "stable": 3}},
+        {"at": 7.1, "expect": {"state": "v09-s4-cls", "wait": 1, "stable": 5}},
+        {"at": 7.1, "snapshot": "g2-320-recorded-settled"}
+      ]
+    },
+    {
+      "name": "G3 · 844×390 기록 있음 · S4 정착 질문과 의자·버튼 무겹침",
+      "viewport": {"width": 844, "height": 390, "mobile": true},
+      "cues": [
+        {"at": 0.2, "clickAt": {"selector": "#s0 [data-stage=\"s0\"]", "scope": "#s0 [data-stage=\"s0\"]", "room": [0.75, 0.2]}},
+        {"at": 2.1, "expect": {"state": "records", "min": 1}},
+        {"at": 2.1, "click": ["#s0 [data-physics-body=\"7:ball\"]"]},
+        {"at": 3.9, "scroll": {"scene": "s4", "progress": 0.2, "seconds": 0.5, "climaxProgress": true}},
+        {"at": 3.9, "expect": {"state": "v06b-s4-ready", "wait": 4}},
+        {"at": 3.9, "scroll": {"scene": "s4", "progress": 0.62, "seconds": 0.85, "climaxProgress": true}},
+        {"at": 3.9, "expect": {"state": "v06b-s4-listening", "wait": 4, "stable": 3}},
+        {"at": 3.9, "scroll": {"scene": "s4", "progress": 0.925, "seconds": 0.75, "climaxProgress": true}},
+        {"at": 3.9, "expect": {"state": "v09-s4-return", "wait": 4, "stable": 3}},
+        {"at": 3.9, "scroll": {"scene": "s4", "progress": 0.975, "seconds": 0.3, "climaxProgress": true}},
+        {"at": 3.9, "expect": {"state": "v09-s4-settled", "wait": 4, "stable": 3}},
+        {"at": 7.1, "expect": {"state": "v09-s4-question", "wait": 3, "stable": 3}},
+        {"at": 7.1, "snapshot": "g3-844-question-settled"}
+      ]
+    },
+    {
+      "name": "G4 · 1440 S6 기록 있음 · 오른쪽 단 눈금과 내 기록",
+      "viewport": {"width": 1440, "height": 900},
+      "cues": [
+        {"at": 0.2, "click": ["#s0 button[data-action=\"drop\"]"]},
+        {"at": 0.2, "expect": {"state": "v08-record", "kind": "thump", "value": 100, "wait": 4}},
+        {"at": 1.6, "scroll": {"scene": "s6", "progress": 0, "seconds": 0}},
+        {"at": 1.6, "expect": {"state": "v08-hud", "scene": "s6", "wait": 4, "stable": 3}},
+        {"at": 1.6, "expect": {"state": "v08-marker", "kind": "thump", "wait": 4, "stable": 3}},
+        {"at": 1.6, "scroll": {"scene": "s6", "progress": 0, "seconds": 0, "center": ".ruler-h"}},
+        {"at": 1.6, "expect": {"state": "v09-ruler-placement", "wait": 4, "stable": 3}},
+        {"at": 1.6, "expect": {"state": "v08-marker", "kind": "thump", "wait": 4}},
+        {"at": 1.6, "snapshot": "g4-1440-ruler"}
+      ]
+    },
+    {
+      "name": "G4 · 1280 S6 기록 있음 · 오른쪽 단 눈금과 내 기록",
+      "viewport": {"width": 1280, "height": 720},
+      "cues": [
+        {"at": 0.2, "click": ["#s0 button[data-action=\"drop\"]"]},
+        {"at": 0.2, "expect": {"state": "v08-record", "kind": "thump", "value": 100, "wait": 4}},
+        {"at": 1.6, "scroll": {"scene": "s6", "progress": 0, "seconds": 0}},
+        {"at": 1.6, "expect": {"state": "v08-hud", "scene": "s6", "wait": 4, "stable": 3}},
+        {"at": 1.6, "expect": {"state": "v08-marker", "kind": "thump", "wait": 4, "stable": 3}},
+        {"at": 1.6, "scroll": {"scene": "s6", "progress": 0, "seconds": 0, "center": ".ruler-h"}},
+        {"at": 1.6, "expect": {"state": "v09-ruler-placement", "wait": 4, "stable": 3}},
+        {"at": 1.6, "snapshot": "g4-1280-ruler"}
+      ]
+    },
+    {
+      "name": "G4 · 1366 S6 기록 있음 · 오른쪽 단 눈금과 내 기록",
+      "viewport": {"width": 1366, "height": 768},
+      "cues": [
+        {"at": 0.2, "click": ["#s0 button[data-action=\"drop\"]"]},
+        {"at": 0.2, "expect": {"state": "v08-record", "kind": "thump", "value": 100, "wait": 4}},
+        {"at": 1.6, "scroll": {"scene": "s6", "progress": 0, "seconds": 0}},
+        {"at": 1.6, "expect": {"state": "v08-hud", "scene": "s6", "wait": 4, "stable": 3}},
+        {"at": 1.6, "expect": {"state": "v08-marker", "kind": "thump", "wait": 4, "stable": 3}},
+        {"at": 1.6, "scroll": {"scene": "s6", "progress": 0, "seconds": 0, "center": ".ruler-h"}},
+        {"at": 1.6, "expect": {"state": "v09-ruler-placement", "wait": 4, "stable": 3}},
+        {"at": 1.6, "snapshot": "g4-1366-ruler"}
+      ]
+    },
+    {
+      "name": "G4 · 1440 S6 빈 상태 · 오른쪽 단 눈금과 기준 설명",
+      "viewport": {"width": 1440, "height": 900},
+      "cues": [
+        {"at": 0.2, "scroll": {"scene": "s6", "progress": 0, "seconds": 0}},
+        {"at": 0.2, "expect": {"state": "v08-hud", "scene": "s6", "wait": 4, "stable": 3}},
+        {"at": 0.2, "expect": {"state": "v08-marker", "kind": "empty", "wait": 4, "stable": 3}},
+        {"at": 0.2, "scroll": {"scene": "s6", "progress": 0, "seconds": 0, "center": ".ruler-h"}},
+        {"at": 0.2, "expect": {"state": "v09-ruler-placement", "wait": 4, "stable": 3}},
+        {"at": 0.2, "snapshot": "g4-1440-empty-ruler"}
+      ]
+    },
+    {
+      "name": "G4 · 1920 S6 기록 있음 · 오른쪽 단 눈금과 기준 설명",
+      "viewport": {"width": 1920, "height": 1080},
+      "cues": [
+        {"at": 0.2, "click": ["#s0 button[data-action=\"drop\"]"]},
+        {"at": 0.2, "expect": {"state": "v08-record", "kind": "thump", "value": 100, "wait": 4}},
+        {"at": 1.6, "scroll": {"scene": "s6", "progress": 0, "seconds": 0}},
+        {"at": 1.6, "expect": {"state": "v08-hud", "scene": "s6", "wait": 4, "stable": 3}},
+        {"at": 1.6, "expect": {"state": "v08-marker", "kind": "thump", "wait": 4, "stable": 3}},
+        {"at": 1.6, "scroll": {"scene": "s6", "progress": 0, "seconds": 0, "center": ".ruler-h"}},
+        {"at": 1.6, "expect": {"state": "v09-ruler-placement", "wait": 4, "stable": 3}},
+        {"at": 1.6, "snapshot": "g4-1920-ruler"}
+      ]
+    },
+    {
+      "name": "G5 · 1440 S6 눈금 아래 소비자원 실측·출처",
+      "viewport": {"width": 1440, "height": 900},
+      "cues": [
+        {"at": 0, "watch": "card-png"},
+        {"at": 0.2, "click": ["#s0 button[data-action=\"drop\"]"]},
+        {"at": 0.2, "expect": {"state": "v08-record", "kind": "thump", "value": 100, "wait": 4}},
+        {"at": 1.6, "scroll": {"scene": "s6", "progress": 0, "seconds": 0}},
+        {"at": 1.6, "expect": {"state": "v08-hud", "scene": "s6", "wait": 4, "stable": 3}},
+        {"at": 1.6, "expect": {"state": "v08-marker", "kind": "thump", "wait": 4, "stable": 3}},
+        {"at": 1.6, "scroll": {"scene": "s6", "progress": 0, "seconds": 0, "center": ".ruler-bridge"}},
+        {"at": 1.6, "expect": {"state": "v09-ruler-source", "wait": 4, "stable": 3}},
+        {"at": 1.6, "snapshot": "g5-1440-source"},
+        {"at": 1.6, "scroll": {"scene": "s6", "progress": 0, "seconds": 0, "center": "button[data-action='save']"}},
+        {"at": 1.6, "expect": {"state": "v07-save", "wait": 4}},
+        {"at": 1.6, "click": ["#s6 button[data-action='save']"]},
+        {"at": 1.6, "expect": {"state": "v09-card-source-free", "wait": 4}}
+      ]
+    },
+    {
+      "name": "G4 · 390 S6 눈금 배치와 내 기록",
+      "viewport": {"width": 390, "height": 844, "mobile": true},
+      "cues": [
+        {"at": 0.2, "scroll": {"scene": "s6", "progress": 0, "seconds": 0}},
+        {"at": 1.6, "reveal": "#s6 figure.ruler figcaption"},
+        {"at": 1.6, "expect": {"state": "v09-ruler-placement", "wait": 4, "stable": 3}},
+        {"at": 1.6, "expect": {"state": "v08-marker", "kind": "empty", "wait": 4}},
+        {"at": 1.6, "snapshot": "g4-390-ruler"}
+      ]
+    },
+    {
+      "name": "G5 · 390 S6 눈금 아래 소비자원 실측·출처",
+      "viewport": {"width": 390, "height": 844, "mobile": true},
+      "cues": [
+        {"at": 0.2, "scroll": {"scene": "s6", "progress": 0, "seconds": 0}},
+        {"at": 1.6, "reveal": "#s6 figure.ruler .ruler-note + p"},
+        {"at": 1.6, "expect": {"state": "v09-ruler-source", "wait": 4, "stable": 3}},
+        {"at": 1.6, "snapshot": "g5-390-source"}
+      ]
+    },
+    {
+      "name": "G5 · 320 S6 눈금 아래 소비자원 실측·출처",
+      "viewport": {"width": 320, "height": 568, "mobile": true},
+      "cues": [
+        {"at": 0.2, "scroll": {"scene": "s6", "progress": 0, "seconds": 0}},
+        {"at": 1.6, "reveal": "#s6 figure.ruler .ruler-note + p"},
+        {"at": 1.6, "expect": {"state": "v09-ruler-source", "wait": 4, "stable": 3}},
+        {"at": 1.6, "snapshot": "g5-320-source"}
+      ]
+    },
+    {
+      "name": "G6 · 1280 S4 준비·정착 이름표 12px · 회전 중 선 이름표와 머리띠",
+      "viewport": {"width": 1280, "height": 720},
+      "cues": [
+        {"at": 0.2, "scroll": {"scene": "s4", "progress": 0.2, "seconds": 0.5, "climaxProgress": true}},
+        {"at": 0.2, "expect": {"state": "v06b-s4-ready", "wait": 4}},
+        {"at": 0.2, "expect": {"state": "v09-room-tags", "angle": 0, "wait": 4, "stable": 3}},
+        {"at": 0.2, "scroll": {"scene": "s4", "progress": 0.3433, "seconds": 0.45, "climaxProgress": true}},
+        {"at": 0.2, "expect": {"state": "v09-room-tags", "angle": 56, "wait": 4, "stable": 3}},
+        {"at": 0.2, "snapshot": "g6-1280-56deg"},
+        {"at": 0.2, "scroll": {"scene": "s4", "progress": 0.4, "seconds": 0.45, "climaxProgress": true}},
+        {"at": 0.2, "expect": {"state": "v09-room-tags", "angle": 90, "wait": 4, "stable": 3}},
+        {"at": 0.2, "snapshot": "g6-1280-90deg"},
+        {"at": 0.2, "scroll": {"scene": "s4", "progress": 0.8122, "seconds": 0.45, "climaxProgress": true}},
+        {"at": 0.2, "expect": {"state": "v09-room-tags", "angle": 236, "wait": 4, "stable": 3}},
+        {"at": 0.2, "snapshot": "g6-1280-236deg"},
+        {"at": 0.2, "scroll": {"scene": "s4", "progress": 0.85, "seconds": 0.45, "climaxProgress": true}},
+        {"at": 0.2, "expect": {"state": "v09-room-tags", "angle": 270, "wait": 4, "stable": 3}},
+        {"at": 0.2, "snapshot": "g6-1280-270deg"},
+        {"at": 0.2, "scroll": {"scene": "s4", "progress": 0.975, "seconds": 0.45, "climaxProgress": true}},
+        {"at": 0.2, "expect": {"state": "v09-s4-settled", "wait": 4, "stable": 3}},
+        {"at": 0.2, "expect": {"state": "v09-room-tags", "angle": 360, "wait": 4, "stable": 3}}
+      ]
+    },
+    {
+      "name": "G6 · 1440 S4 준비·정착 이름표 12px · 회전 중 선 이름표와 머리띠",
+      "viewport": {"width": 1440, "height": 900},
+      "cues": [
+        {"at": 0.2, "scroll": {"scene": "s4", "progress": 0.2, "seconds": 0.5, "climaxProgress": true}},
+        {"at": 0.2, "expect": {"state": "v06b-s4-ready", "wait": 4}},
+        {"at": 0.2, "expect": {"state": "v09-room-tags", "angle": 0, "wait": 4, "stable": 3}},
+        {"at": 0.2, "scroll": {"scene": "s4", "progress": 0.3433, "seconds": 0.45, "climaxProgress": true}},
+        {"at": 0.2, "expect": {"state": "v09-room-tags", "angle": 56, "wait": 4, "stable": 3}},
+        {"at": 0.2, "snapshot": "g6-1440-56deg"},
+        {"at": 0.2, "scroll": {"scene": "s4", "progress": 0.4, "seconds": 0.45, "climaxProgress": true}},
+        {"at": 0.2, "expect": {"state": "v09-room-tags", "angle": 90, "wait": 4, "stable": 3}},
+        {"at": 0.2, "snapshot": "g6-1440-90deg"},
+        {"at": 0.2, "scroll": {"scene": "s4", "progress": 0.8122, "seconds": 0.45, "climaxProgress": true}},
+        {"at": 0.2, "expect": {"state": "v09-room-tags", "angle": 236, "wait": 4, "stable": 3}},
+        {"at": 0.2, "snapshot": "g6-1440-236deg"},
+        {"at": 0.2, "scroll": {"scene": "s4", "progress": 0.85, "seconds": 0.45, "climaxProgress": true}},
+        {"at": 0.2, "expect": {"state": "v09-room-tags", "angle": 270, "wait": 4, "stable": 3}},
+        {"at": 0.2, "snapshot": "g6-1440-270deg"},
+        {"at": 0.2, "scroll": {"scene": "s4", "progress": 0.975, "seconds": 0.45, "climaxProgress": true}},
+        {"at": 0.2, "expect": {"state": "v09-s4-settled", "wait": 4, "stable": 3}},
+        {"at": 0.2, "expect": {"state": "v09-room-tags", "angle": 360, "wait": 4, "stable": 3}}
+      ]
+    }
+  ]
+}

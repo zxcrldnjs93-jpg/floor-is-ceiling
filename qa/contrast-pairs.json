@@ -1,0 +1,20 @@
+[
+  { "label": "S0·S1 종이 위 본문·안내", "fg": "#1B2128", "bg": "#F5F6F3", "type": "text" },
+  { "label": "S2·S3·S7 아래층 종이 위 본문", "fg": "#1B2128", "bg": "#ECEEEB", "type": "text" },
+  { "label": "S0 첫 제목과 S4 콜아웃의 큰 글", "fg": "#1B2128", "bg": "#F5F6F3", "type": "large" },
+  { "label": "S2·S3 제목의 큰 글", "fg": "#1B2128", "bg": "#ECEEEB", "type": "large" },
+  { "label": "켜진 토글·주요 버튼의 반전 글자", "fg": "#F5F6F3", "bg": "#1B2128", "type": "text" },
+  { "label": "S0 부제·센서 보조 문구·카드 표제란", "fg": "#59626A", "bg": "#F5F6F3", "type": "text" },
+  { "label": "S2 아래층 안내와 S7 각주", "fg": "#59626A", "bg": "#ECEEEB", "type": "text" },
+  { "label": "S3 의자 등 종이 표지의 쿵 수치", "fg": "#C23A12", "bg": "#F4F6F3", "type": "text" },
+  { "label": "S5 맨바닥 막대 수치·S6 매트 비교 줄", "fg": "#C23A12", "bg": "#F5F6F3", "type": "text" },
+  { "label": "S5 아래층 바탕 위 맨바닥 수치", "fg": "#C23A12", "bg": "#ECEEEB", "type": "text" },
+  { "label": "S5 매트 막대 수치·S6 매트 비교 줄과 배지", "fg": "#1F7366", "bg": "#F5F6F3", "type": "text" },
+  { "label": "S5 아래층 바탕 위 매트 수치", "fg": "#1F7366", "bg": "#ECEEEB", "type": "text" },
+  { "label": "머리띠 현재 층 표시 21px", "fg": "#FF5A2C", "bg": "#24140F", "type": "large" },
+  { "label": "머리띠 현재 층 표시 17px", "fg": "#FF5A2C", "bg": "#24140F", "type": "text" },
+  { "label": "머리띠 비현재 층 표시 21px", "fg": "#8D6250", "bg": "#161A1E", "type": "large" },
+  { "label": "머리띠 비현재 층 표시 19px", "fg": "#8D6250", "bg": "#161A1E", "type": "large" },
+  { "label": "S6 카드 최대 쿵 LED 숫자", "fg": "#FF5A2C", "bg": "#161A1E", "type": "large" },
+  { "label": "S6 카드 최대 쿵 설명 글자", "fg": "#C9B2A8", "bg": "#161A1E", "type": "text" }
+]

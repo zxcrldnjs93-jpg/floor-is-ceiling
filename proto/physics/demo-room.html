@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>중력을 뒤집으면 · 방 물리 데모</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #faf8f2; color: #272c2d; font: 1rem/1.55 system-ui, sans-serif; word-break: keep-all; }
+  main { width: min(100% - 2rem, 42rem); margin-inline: auto; padding-block: 1.5rem 2rem; }
+  h1 { margin: 0; font-size: clamp(1.6rem, 7vw, 2.75rem); line-height: 1.2; }
+  canvas { display: block; width: 100%; height: auto; outline: 1px solid #485258; touch-action: pan-y; }
+  .controls { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-block: 1rem; }
+  .controls[hidden] { display: none; }
+  button { min-height: 2.75rem; padding: .35rem .7rem; font: inherit; color: inherit; background: #fffdf6; border: 1px solid #485258; border-radius: .25rem; }
+  button[aria-pressed="true"] { background: #2e4b57; color: white; }
+  button:focus-visible { outline: 3px solid #08688c; outline-offset: 3px; }
+  button:disabled { opacity: .55; }
+  .measure { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem 1rem; }
+  meter { width: 7rem; vertical-align: middle; }
+  #status { min-block-size: 1.55em; margin-block: .35rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>내 바닥은 누군가의 천장입니다.</h1>
+  <p id="help">방을 탭해 한 걸음 내딛거나 의자를 옆으로 끌어 보세요. 위층의 충격에 아래층 조명이 흔들립니다.</p>
+  <canvas id="scene" width="480" height="382" role="img" aria-label="공, 의자, 컵, 책이 있는 위층 방과 아래층 조명" aria-describedby="help">
+    공, 의자, 컵, 책이 있는 방과 아래층 조명
+  </canvas>
+  <div id="controls" class="controls" hidden>
+    <button id="walk" type="button">한 걸음</button>
+    <button id="nudge" type="button">의자 밀기</button>
+    <button id="mat" type="button" aria-pressed="false">매트 놓기</button>
+    <button id="flip" type="button" aria-pressed="false">중력 뒤집기</button>
+    <button id="sensor" type="button" aria-pressed="false">기울기 센서</button>
+    <button id="replay" type="button">아래층에서 재생</button>
+    <button id="pause" type="button" aria-pressed="false">움직임 일시정지</button>
+  </div>
+  <div class="measure">
+    <label for="meter">쿵 지수 (상대값)</label>
+    <meter id="meter" min="0" max="100" value="0"></meter>
+    <span id="index" aria-hidden="true">0</span>
+  </div>
+  <p id="status" role="status"></p>
+  <noscript><p>스크립트를 켜면 물리 장면을 체험할 수 있습니다.</p></noscript>
+</main>
+<script type="module">
+  import { fixedLoop, tiltGravity } from './engine.js';
+  import { playImpactTrack, recordImpacts } from './replay.js';
+  import { createRoom, exciteLamp, isSlabImpact, roomInput, WIDTH, FLOOR, HEIGHT } from './room.js';
+
+  const $ = id => document.getElementById(id);
+  const canvas = $('scene'), ctx = canvas.getContext('2d');
+  const dpr = Math.min(devicePixelRatio,2);
+  canvas.width = Math.round(WIDTH*dpr);
+  canvas.height = Math.round(HEIGHT*dpr);
+  ctx.setTransform(canvas.width/WIDTH,0,0,canvas.height/HEIGHT,0,0);
+  $('controls').hidden = false;
+  const room = createRoom();
+  const status = $('status');
+  let reduced = false, paused = false, sensorOn = false;
+  let gesture, marker, player;
+  const track = recordImpacts(room.world,{filter:e => isSlabImpact(room,e),limit:120});
+
+  function react(event) {
+    exciteLamp(room,event);
+    marker = {x:event.point.x,strength:Math.min(1,event.impulse/760),tick:room.lower.tick};
+    const index = Math.min(100,Math.round(event.impulse/8));
+    $('meter').value = index;
+    $('index').textContent = String(index);
+  }
+
+  room.world.onImpact(event => {
+    if (isSlabImpact(room,event)) react(event);
+  });
+
+  function step(dt) {
+    if (player) {
+      player.step(dt);
+      if (player.done) player = undefined;
+    } else {
+      room.world.step(dt);
+    }
+    room.lower.step(dt);
+  }
+
+  function render(alpha) {
+    ctx.fillStyle = '#fffdf7';
+    ctx.fillRect(0,0,WIDTH,FLOOR);
+    ctx.fillStyle = '#e7eef0';
+    ctx.fillRect(0,FLOOR,WIDTH,HEIGHT-FLOOR);
+    ctx.fillStyle = '#354951';
+    ctx.fillRect(0,FLOOR,WIDTH,13);
+    ctx.fillRect(0,0,WIDTH,6);
+    if (room.mat) {
+      ctx.fillStyle = '#39736e';
+      ctx.fillRect(1,FLOOR-7,WIDTH-2,7);
+    }
+
+    ctx.font = '600 17px system-ui';
+    ctx.fillStyle = '#354951';
+    ctx.fillText('7F',16,29);
+    ctx.fillText('6F',16,FLOOR+38);
+    ctx.textAlign = 'right';
+    ctx.fillText(room.up ? '↑ 위로 향하는 중력' : '↓ 아래로 향하는 중력',WIDTH-16,29);
+    ctx.textAlign = 'left';
+
+    if (marker) {
+      const age = (room.lower.tick-marker.tick)/120;
+      const fade = reduced ? 1 : Math.max(0,1-age/0.88);
+      if (fade) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(0,FLOOR+13,WIDTH,HEIGHT-FLOOR-13);
+        ctx.clip();
+        ctx.strokeStyle = '#ab532a';
+        ctx.lineWidth = 1.5+2*marker.strength;
+        ctx.globalAlpha = fade*(0.3+marker.strength*0.7);
+        for (const gap of [0,14,28]) {
+          ctx.beginPath();
+          ctx.arc(marker.x,FLOOR+13,16+gap+(reduced ? 0 : age*78),0,Math.PI);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+    }
+
+    for (const name of ['ball','chair','cup','book','foot']) {
+      const body = room[name];
+      if (!body) continue;
+      const {x,y,angle} = body.pose(alpha);
+      ctx.save();
+      ctx.translate(x,y);
+      ctx.rotate(angle);
+      ctx.strokeStyle = '#354951';
+      ctx.lineWidth = 2.3;
+      ctx.beginPath();
+      if (name === 'chair') {
+        ctx.moveTo(-28,-39);
+        ctx.lineTo(-28,39);
+        ctx.moveTo(27,39);
+        ctx.lineTo(27,1);
+        ctx.lineTo(-28,1);
+        ctx.moveTo(-28,-35);
+        ctx.lineTo(27,-35);
+        ctx.lineTo(27,-12);
+        ctx.lineTo(-28,-12);
+        ctx.stroke();
+      } else if (body.shape.radius) {
+        ctx.fillStyle = name === 'ball' ? '#c7794c' : '#ab532a';
+        ctx.arc(0,0,body.shape.radius,0,Math.PI*2);
+        ctx.fill();
+        ctx.stroke();
+      } else {
+        for (const [i,p] of body.shape.points.entries()) {
+          if (i === 0) ctx.moveTo(p.x,p.y);
+          else ctx.lineTo(p.x,p.y);
+        }
+        ctx.closePath();
+        ctx.fillStyle = name === 'book' ? '#849ba2' : '#fff8dc';
+        ctx.fill();
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    const base = room.lower.linkAnchor(room.cable);
+    const lamp = room.lamp.pose(alpha);
+    const angle = Math.atan2(base.x-lamp.x,lamp.y-base.y);
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#354951';
+    ctx.beginPath();
+    ctx.moveTo(base.x,base.y);
+    ctx.lineTo(lamp.x,lamp.y);
+    ctx.stroke();
+    ctx.save();
+    ctx.translate(lamp.x,lamp.y);
+    ctx.rotate(angle);
+    ctx.beginPath();
+    ctx.moveTo(-10,-4);
+    ctx.lineTo(10,-4);
+    ctx.lineTo(21,12);
+    ctx.lineTo(-21,12);
+    ctx.closePath();
+    ctx.fillStyle = '#f5ce70';
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function syncButtons() {
+    $('mat').setAttribute('aria-pressed',String(room.mat));
+    $('mat').textContent = room.mat ? '매트 걷기' : '매트 놓기';
+    $('flip').setAttribute('aria-pressed',String(room.up));
+    $('sensor').setAttribute('aria-pressed',String(sensorOn));
+  }
+
+  function act(command) {
+    if (paused) return;
+    player = undefined;
+    roomInput(room,command);
+    syncButtons();
+    if (reduced) {
+      const count = command.type === 'flip' ? 190 : 50;
+      if (command.type !== 'mat') for (let i=0;i<count;i++) step(1/120);
+      render(1);
+    }
+  }
+
+  const tilt = tiltGravity(room.world,{
+    strength:920,
+    onGravity:vec => act({type:'gravity',...vec}),
+    onFailure(reason) {
+      sensorOn = false;
+      syncButtons();
+      status.textContent = reason === 'denied' ? '센서 권한이 꺼져 있습니다. 중력 뒤집기 버튼을 사용할 수 있습니다.'
+        : '기울기 입력을 받을 수 없습니다. 중력 뒤집기 버튼을 사용할 수 있습니다.';
+    }
+  });
+
+  $('walk').onclick = () => act({type:'walk',x:WIDTH/2});
+  $('nudge').onclick = () => act({type:'nudge'});
+  $('mat').onclick = () => act({type:'mat',enabled:!room.mat});
+  $('flip').onclick = () => {
+    const up = !room.up;
+    tilt.stop();
+    sensorOn = false;
+    act({type:'flip',up});
+  };
+  $('sensor').onclick = async () => {
+    if (sensorOn) {
+      tilt.stop();
+      sensorOn = false;
+      status.textContent = '';
+    } else {
+      sensorOn = await tilt.start() === 'enabled';
+      if (sensorOn) status.textContent = '기울기 센서 입력을 기다립니다.';
+    }
+    syncButtons();
+  };
+
+  $('replay').onclick = () => {
+    dropGesture();
+    const events = track.snapshot();
+    const last = events.at(-1);
+    if (!last) { status.textContent = '한 걸음 내딛어 충격을 먼저 기록해 보세요.'; return; }
+    const recent = events.filter(event => event.time >= last.time-8);
+    if (reduced) {
+      react(last);
+      status.textContent = '기록의 마지막 충격을 정지 화면으로 표시합니다.';
+      render(1);
+      return;
+    }
+    tilt.stop();
+    sensorOn = false;
+    syncButtons();
+    status.textContent = `아래층에서 충격 ${recent.length}개를 재생합니다.`;
+    player = playImpactTrack(recent,react,{from:recent[0].time});
+  };
+
+  function roomPoint(event) {
+    const bounds = canvas.getBoundingClientRect();
+    return {
+      x:(event.clientX-bounds.left)*WIDTH/bounds.width,
+      y:(event.clientY-bounds.top)*HEIGHT/bounds.height
+    };
+  }
+
+  function dropGesture() {
+    if (!gesture) return;
+    const {id,dragging} = gesture;
+    gesture = undefined;
+    if (dragging) roomInput(room,{type:'release'});
+    if (canvas.hasPointerCapture(id)) canvas.releasePointerCapture(id);
+  }
+
+  canvas.addEventListener('pointerdown',event => {
+    if (paused || gesture || event.button !== 0) return;
+    const p = roomPoint(event);
+    if (p.y > FLOOR) return;
+    gesture = {id:event.pointerId,...p,chair:room.chair.contains(p.x,p.y),dragging:false};
+    canvas.setPointerCapture(event.pointerId);
+  });
+  canvas.addEventListener('pointermove',event => {
+    if (!gesture?.chair || gesture.id !== event.pointerId || reduced) return;
+    const p = roomPoint(event);
+    if (!gesture.dragging && Math.hypot(p.x-gesture.x,p.y-gesture.y) > 6) {
+      gesture.dragging = true;
+      act({type:'grab',x:gesture.x,y:gesture.y});
+    }
+    if (gesture.dragging) act({type:'drag',...p});
+  });
+  canvas.addEventListener('pointerup',event => {
+    if (gesture?.id !== event.pointerId) return;
+    const {x,y,dragging} = gesture;
+    const p = roomPoint(event);
+    dropGesture();
+    if (!dragging && Math.hypot(p.x-x,p.y-y) < 12) act({type:'walk',x});
+  });
+  for (const type of ['pointercancel','lostpointercapture']) {
+    canvas.addEventListener(type,event => { if (gesture?.id === event.pointerId) dropGesture(); });
+  }
+
+  const actionButtons = [...$('controls').querySelectorAll('button:not(#pause)')];
+  function syncAvailability() {
+    for (const button of actionButtons) button.disabled = paused || (reduced && button.id === 'sensor');
+  }
+  const loop = fixedLoop({step},canvas,render,{onReduced(value) {
+    reduced = value;
+    if (reduced) {
+      dropGesture();
+      tilt.stop();
+      sensorOn = false;
+      player = undefined;
+    }
+    $('help').textContent = reduced
+      ? '움직임 줄이기 설정을 반영해 입력에 따른 결과를 정지 화면으로 표시합니다.'
+      : '방을 탭해 한 걸음 내딛거나 의자를 옆으로 끌어 보세요. 위층의 충격에 아래층 조명이 흔들립니다.';
+    syncButtons();
+    syncAvailability();
+  }});
+  $('pause').onclick = () => {
+    if (!paused) {
+      tilt.stop();
+      dropGesture();
+      sensorOn = false;
+    }
+    paused = !paused;
+    if (paused) loop.pause();
+    else loop.resume();
+    $('pause').setAttribute('aria-pressed',String(paused));
+    $('pause').textContent = paused ? '움직임 재개' : '움직임 일시정지';
+    syncButtons();
+    syncAvailability();
+  };
+</script>
+</body>
+</html>

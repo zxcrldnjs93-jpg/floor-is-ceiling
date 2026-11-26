@@ -1,0 +1,327 @@
+{
+  "cases": [
+    {
+      "name": "390 터치 · 첫 쿵 100과 6층 천장 · 안내 세 문장",
+      "viewport": {
+        "width": 390,
+        "height": 844,
+        "mobile": true
+      },
+      "cues": [
+        {"at": 0, "watch": "v06-live"},
+        {"at": 0.2, "click": ["#s0 button[data-action=\"drop\"]"]},
+        {"at": 0.2, "expect": {"state": "v07-first", "wait": 3, "stable": 3}},
+        {"at": 0.2, "expect": {"state": "v06-first-live", "wait": 3}},
+        {"at": 0.2, "expect": {"state": "v07-font", "scene": "s0"}},
+        {"at": 0.2, "snapshot": "first-impact"}
+      ]
+    },
+    {
+      "name": "390 무입력 · S6 기준 정의와 반전하지 않은 칸 · 투표 CTA",
+      "viewport": {
+        "width": 390,
+        "height": 844,
+        "mobile": true
+      },
+      "cues": [
+        {"at": 0.2, "scroll": {"scene": "s6", "progress": 0, "seconds": 0}},
+        {"at": 0.3, "reveal": "#s6 [data-result-empty]"},
+        {"at": 0.3, "expect": {"state": "v06-home", "wait": 4}},
+        {"at": 0.3, "reveal": "#s6 .recap-def"},
+        {"at": 0.3, "expect": {"state": "v07-recap-definition", "wait": 4, "stable": 3}},
+        {"at": 0.3, "reveal": "#s6 [data-recap='listen']"},
+        {"at": 0.3, "expect": {"state": "v07-recap-empty", "wait": 4, "stable": 3}},
+        {"at": 0.3, "expect": {"state": "v07-font", "scene": "s6"}},
+        {"at": 0.3, "reveal": "#s6 .vote"},
+        {"at": 0.3, "expect": {"state": "v07-vote", "wait": 4}},
+        {"at": 0.3, "snapshot": "vote"}
+      ]
+    },
+    {
+      "name": "320 키보드 · 두 도움말 닫힘·열림·다시 닫힘",
+      "viewport": {
+        "width": 320,
+        "height": 568,
+        "mobile": true
+      },
+      "cues": [
+        {"at": 0.2, "scroll": {"scene": "s6", "progress": 0, "seconds": 0}},
+        {"at": 0.3, "reveal": "#s6 .next .next-cell:first-child details > summary"},
+        {"at": 0.3, "expect": {"state": "v07-details-closed", "wait": 3}},
+        {"at": 0.3, "tabTo": "#s6 .next .next-cell:first-child details > summary"},
+        {"at": 0.3, "enter": "#s6 .next .next-cell:first-child details > summary"},
+        {"at": 0.3, "expect": {"state": "v07-detail", "wait": 2, "detail": "up"}},
+        {"at": 0.3, "snapshot": "mat-details"},
+        {"at": 0.3, "enter": "#s6 .next .next-cell:first-child details > summary"},
+        {"at": 0.3, "expect": {"state": "v07-details-closed", "wait": 2}},
+        {"at": 0.3, "reveal": "#s6 .next .next-cell:nth-child(2) details > summary"},
+        {"at": 0.3, "tabTo": "#s6 .next .next-cell:nth-child(2) details > summary"},
+        {"at": 0.3, "enter": "#s6 .next .next-cell:nth-child(2) details > summary"},
+        {"at": 0.3, "expect": {"state": "v07-detail", "wait": 2, "detail": "down"}},
+        {"at": 0.3, "snapshot": "note-details"},
+        {"at": 0.3, "enter": "#s6 .next .next-cell:nth-child(2) details > summary"},
+        {"at": 0.3, "expect": {"state": "v07-details-closed", "wait": 2}}
+      ]
+    },
+    {
+      "name": "390 터치 · 두 도움말 독립 개폐",
+      "viewport": {
+        "width": 390,
+        "height": 844,
+        "mobile": true
+      },
+      "cues": [
+        {"at": 0.2, "scroll": {"scene": "s6", "progress": 0, "seconds": 0}},
+        {"at": 0.3, "reveal": "#s6 .next .next-cell:first-child details > summary"},
+        {"at": 0.3, "expect": {"state": "v07-details-closed", "wait": 3}},
+        {"at": 0.3, "click": ["#s6 .next .next-cell:first-child details > summary"]},
+        {"at": 0.3, "expect": {"state": "v07-detail", "wait": 2, "detail": "up"}},
+        {"at": 0.3, "click": ["#s6 .next .next-cell:first-child details > summary"]},
+        {"at": 0.3, "expect": {"state": "v07-details-closed", "wait": 2}},
+        {"at": 0.3, "reveal": "#s6 .next .next-cell:nth-child(2) details > summary"},
+        {"at": 0.3, "click": ["#s6 .next .next-cell:nth-child(2) details > summary"]},
+        {"at": 0.3, "expect": {"state": "v07-detail", "wait": 2, "detail": "down"}},
+        {"at": 0.3, "click": ["#s6 .next .next-cell:nth-child(2) details > summary"]},
+        {"at": 0.3, "expect": {"state": "v07-details-closed", "wait": 2}}
+      ]
+    },
+    {
+      "name": "390 · 7층 기록 뒤 카드 주 행동과 한글 파일명 · 끝 상태와 출처",
+      "viewport": {
+        "width": 390,
+        "height": 844,
+        "mobile": true
+      },
+      "cues": [
+        {"at": 0, "watch": "card-png"},
+        {"at": 0.2, "click": ["#s0 button[data-action=\"drop\"]"]},
+        {"at": 0.2, "expect": {"state": "v07-first", "wait": 4}},
+        {"at": 0.2, "scroll": {"scene": "s6", "progress": 0, "seconds": 0}},
+        {"at": 0.2, "reveal": "#s6 button[data-action=\"save\"]"},
+        {"at": 0.2, "expect": {"state": "v07-save", "wait": 4}},
+        {"at": 0.2, "snapshot": "card-actions"},
+        {"at": 0.2, "click": ["#s6 button[data-action=\"save\"]"]},
+        {"at": 0.2, "expect": {"state": "v07-png", "wait": 5}},
+        {"at": 0.2, "scroll": {"scene": "s7", "progress": 1, "seconds": 0}},
+        {"at": 0.2, "expect": {"state": "v07-footer", "wait": 4, "stable": 3}},
+        {"at": 0.2, "expect": {"state": "v07-font", "scene": "s7"}},
+        {"at": 0.2, "snapshot": "footer"},
+        {"at": 0.2, "click": ["#s7 a[href^='#']:not([data-action])"]},
+        {"at": 0.2, "expect": {"state": "v07-vote", "wait": 4}},
+        {"at": 0.2, "scroll": {"scene": "s7", "progress": 1, "seconds": 0}},
+        {"at": 0.2, "expect": {"state": "v07-footer", "wait": 4}},
+        {"at": 0.2, "click": ["#s7 a[data-action='restart'][href='#s0']"]},
+        {"at": 0.2, "expect": {"state": "v07-restart", "wait": 4, "stable": 3}}
+      ]
+    },
+    {
+      "name": "390 · S1 터치 안내는 3초 무조작 뒤에만",
+      "viewport": {
+        "width": 390,
+        "height": 844,
+        "mobile": true
+      },
+      "cues": [
+        {"at": 0.2, "scroll": {"scene": "s1", "progress": 0.3, "seconds": 0}},
+        {"at": 0.7, "expect": {"state": "v07-s1-no-guide", "wait": 1}},
+        {"at": 2.9, "expect": {"state": "v07-s1-no-guide"}},
+        {"at": 3.25, "expect": {"state": "v07-s1-guide", "wait": 1.5}},
+        {"at": 3.25, "snapshot": "touch-guide"},
+        {"at": 3.3, "click": ["#s1 button[data-action=\"throw-ball\"]"]},
+        {"at": 3.3, "expect": {"state": "v07-s1-no-guide", "wait": 2}}
+      ]
+    },
+    {
+      "name": "390 · S1 먼저 조작하면 3초 뒤에도 터치 안내 없음",
+      "viewport": {
+        "width": 390,
+        "height": 844,
+        "mobile": true
+      },
+      "cues": [
+        {"at": 0.2, "scroll": {"scene": "s1", "progress": 0.3, "seconds": 0}},
+        {"at": 0.65, "click": ["#s1 button[data-action=\"throw-ball\"]"]},
+        {"at": 3.6, "expect": {"state": "v07-s1-no-guide", "wait": 1}}
+      ]
+    },
+    {
+      "name": "844 낮은 화면 · S2 실제 테이프 완료 뒤 소리 안내·다시 듣기",
+      "viewport": {
+        "width": 844,
+        "height": 390,
+        "mobile": true
+      },
+      "cues": [
+        {"at": 0, "watch": "v07-s2"},
+        {"at": 0.2, "click": ["#s0 button[data-action=\"drop-high\"]"]},
+        {"at": 1.45, "expect": {"state": "records", "min": 1}},
+        {"at": 1.65, "click": ["#s0 button[data-action=\"tap\"]"]},
+        {"at": 2.38, "click": ["#s0 button[data-action=\"tap\"]"]},
+        {"at": 3.25, "scroll": {"scene": "s2", "progress": 0.33, "seconds": 0.35}},
+        {"at": 3.75, "expect": {"state": "v07-s2-no-guide", "wait": 1}},
+        {"at": 3.75, "expect": {"state": "v07-font", "scene": "s2"}},
+        {"at": 3.75, "expect": {"state": "v07-s2-guide", "wait": 7}},
+        {"at": 3.75, "click": ["#s2 button[data-action=\"replay\"]"]},
+        {"at": 3.75, "expect": {"state": "v07-s2-no-guide", "wait": 1}},
+        {"at": 3.75, "expect": {"state": "v07-s2-guide", "wait": 7}}
+      ]
+    },
+    {
+      "name": "1440 · 두 스크럽 속도의 같은 E5 · S6 반전 칸과 최고 매트 43%",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cues": [
+        {"at": 0.2, "click": ["#s0 button[data-action=\"drop-high\"]"]},
+        {"at": 1.65, "expect": {"state": "records", "min": 1}},
+        {"at": 1.7, "scroll": {"scene": "s3", "progress": 0.68, "seconds": 0.45, "sceneProgress": true}},
+        {"at": 2.3, "expect": {"state": "relay-button", "enabled": true}},
+        {"at": 2.3, "click": ["#s3 button[data-action=\"nudge\"]"]},
+        {"at": 4.2, "scroll": {"scene": "s4", "progress": 0.2, "seconds": 0.35, "climaxProgress": true}},
+        {"at": 4.7, "expect": {"state": "v06b-s4-ready", "wait": 4, "stable": 3}},
+        {"at": 4.7, "watch": "v07-s4"},
+        {"at": 4.7, "watch": "v07-mask"},
+        {"at": 4.7, "scroll": {"scene": "s4", "progress": 0.62, "seconds": 2.8, "climaxProgress": true}},
+        {"at": 4.7, "expect": {"state": "v07-s4-beat", "wait": 5, "pass": 1}},
+        {"at": 4.7, "expect": {"state": "v07-s4-mask", "wait": 2, "mode": "normal"}},
+        {"at": 4.7, "snapshot": "slow-e5"},
+        {"at": 4.7, "scroll": {"scene": "s4", "progress": 0.2, "seconds": 0, "climaxProgress": true}},
+        {"at": 4.7, "expect": {"state": "v06b-s4-ready", "wait": 4, "stable": 3}},
+        {"at": 4.7, "watch": "v07-s4"},
+        {"at": 4.7, "scroll": {"scene": "s4", "progress": 0.62, "seconds": 0.4, "climaxProgress": true}},
+        {"at": 4.7, "expect": {"state": "v07-s4-beat", "wait": 5, "pass": 2}},
+        {"at": 4.7, "snapshot": "fast-e5"},
+        {"at": 4.7, "scroll": {"scene": "s4", "progress": 0.97, "seconds": 0.8, "climaxProgress": true}},
+        {"at": 4.7, "expect": {"state": "v06-s4-line-return", "wait": 5, "stable": 3}},
+        {"at": 4.7, "scroll": {"scene": "s5", "progress": 0.15, "seconds": 0.5}},
+        {"at": 4.7, "expect": {"state": "v04-mat-ready", "wait": 4, "heightSource": "peak"}},
+        {"at": 4.7, "click": ["#s5 button[data-action=\"mat-before\"]"]},
+        {"at": 4.7, "expect": {"state": "v04-mat-bare", "wait": 5, "beforeValue": 200}},
+        {"at": 4.7, "click": ["#s5 button[data-action=\"mat-lay\"]"]},
+        {"at": 4.7, "expect": {"state": "v04-mat-laid", "wait": 4}},
+        {"at": 4.7, "click": ["#s5 button[data-action=\"mat-after\"]"]},
+        {"at": 4.7, "expect": {"state": "v04-mat-compared", "wait": 5}},
+        {"at": 4.7, "expect": {"state": "v07-mat-copy", "wait": 3}},
+        {"at": 4.7, "scroll": {"scene": "s6", "progress": 0, "seconds": 0}},
+        {"at": 4.7, "reveal": "#s6 .recap-def"},
+        {"at": 4.7, "expect": {"state": "v07-recap-definition", "wait": 4}},
+        {"at": 4.7, "reveal": "#s6 [data-recap='listen']"},
+        {"at": 4.7, "expect": {"state": "v07-recap-done", "wait": 4}},
+        {"at": 4.7, "expect": {"state": "v07-mat-percent-ready", "wait": 3, "before": 200, "after": 114}},
+        {"at": 4.7, "reveal": "#s6 [data-recap='mat'] .rc-pct"},
+        {"at": 4.7, "expect": {"state": "v07-mat-percent", "wait": 3, "before": 200, "after": 114}},
+        {"at": 4.7, "snapshot": "recap-done"}
+      ]
+    },
+    {
+      "name": "320 일반 · S4 듣기 글과 의자·머그·표지 사이 겹침 없음",
+      "viewport": {"width": 320, "height": 568, "mobile": true},
+      "cues": [
+        {"at": 0.2, "scroll": {"scene": "s4", "progress": 0.2, "seconds": 0, "climaxProgress": true}},
+        {"at": 0.2, "expect": {"state": "v06b-s4-ready", "wait": 4, "stable": 3}},
+        {"at": 0.2, "click": ["#s4 button[data-action='flip']"]},
+        {"at": 0.2, "expect": {"state": "v06b-s4-listening", "wait": 5, "stable": 3}},
+        {"at": 0.2, "expect": {"state": "v07-s4-layout", "wait": 3}},
+        {"at": 0.2, "snapshot": "320-listen"}
+      ]
+    },
+    {
+      "name": "390 줄이기 · S4 정지 글·겹침 · 한 화면 넘는 정지 구간 계측",
+      "viewport": {
+        "width": 390,
+        "height": 844,
+        "mobile": true,
+        "reducedMotion": true
+      },
+      "cues": [
+        {"at": 0.2, "scroll": {"scene": "s4", "progress": 0.2, "seconds": 0, "climaxProgress": true}},
+        {"at": 0.2, "expect": {"state": "v06b-s4-ready", "wait": 4, "stable": 3}},
+        {"at": 0.2, "watch": "v07-mask"},
+        {"at": 0.2, "scroll": {"scene": "s4", "progress": 0.56, "seconds": 0.45, "climaxProgress": true}},
+        {"at": 0.2, "expect": {"state": "v06b-s4-listening", "wait": 5, "stable": 3}},
+        {"at": 0.2, "expect": {"state": "v07-s4-mask", "wait": 2, "mode": "reduced"}},
+        {"at": 0.2, "expect": {"state": "v07-s4-layout", "wait": 3}},
+        {"at": 0.2, "snapshot": "reduced-listen"},
+        {"at": 0.2, "expect": {"state": "v07-reduced-span", "wait": 4}}
+      ]
+    },
+    {
+      "name": "1280 일시정지 먼저 · 스크롤 각도 잠금 · 버튼으로 180° 듣기",
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "cues": [
+        {"at": 0.2, "scroll": {"scene": "s4", "progress": 0.2, "seconds": 0, "climaxProgress": true}},
+        {"at": 0.2, "expect": {"state": "v06b-s4-ready", "wait": 4, "stable": 3}},
+        {"at": 0.2, "click": ["#motion-pause"]},
+        {"at": 0.2, "scroll": {"scene": "s4", "progress": 0.62, "seconds": 0, "climaxProgress": true}},
+        {"at": 0.2, "expect": {"state": "v07-s4-paused-upright", "wait": 3, "stable": 3}},
+        {"at": 0.2, "scroll": {"scene": "s4", "progress": 0.2, "seconds": 0, "climaxProgress": true}},
+        {"at": 0.2, "expect": {"state": "v06b-s4-ready", "wait": 4, "stable": 3}},
+        {"at": 0.2, "watch": "v07-mask"},
+        {"at": 0.2, "click": ["#s4 button[data-action='flip']"]},
+        {"at": 0.2, "expect": {"state": "v06-inverted", "wait": 5, "stable": 3}},
+        {"at": 0.2, "expect": {"state": "v07-s4-mask", "wait": 3, "mode": "paused"}},
+        {"at": 0.2, "snapshot": "paused-button-listening"}
+      ]
+    },
+    {
+      "name": "1280 스크롤로 180° 듣기 → 일시정지·재개 · 같은 제목과 닦임 재실행 없음",
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "cues": [
+        {"at": 0.2, "scroll": {"scene": "s4", "progress": 0.2, "seconds": 0, "climaxProgress": true}},
+        {"at": 0.2, "expect": {"state": "v06b-s4-ready", "wait": 4, "stable": 3}},
+        {"at": 0.2, "watch": "v07-mask"},
+        {"at": 0.2, "scroll": {"scene": "s4", "progress": 0.62, "seconds": 0.65, "climaxProgress": true}},
+        {"at": 0.2, "expect": {"state": "v06-inverted", "wait": 5, "stable": 3}},
+        {"at": 0.2, "expect": {"state": "v07-s4-mask", "wait": 3, "mode": "normal"}},
+        {"at": 0.2, "click": ["#motion-pause"]},
+        {"at": 0.2, "watch": "v07-mask"},
+        {"at": 0.2, "expect": {"state": "v07-s4-mask", "wait": 3, "mode": "paused"}},
+        {"at": 0.2, "snapshot": "listening-paused"},
+        {"at": 0.2, "watch": "v07-mask"},
+        {"at": 0.2, "click": ["#motion-pause"]},
+        {"at": 0.2, "expect": {"state": "v07-s4-mask", "wait": 3, "mode": "resumed"}},
+        {"at": 0.2, "snapshot": "listening-resumed"}
+      ]
+    },
+    {
+      "name": "320 · S3 의자만 밀고 S4 생략 · 기준 매트 44%와 E2 빈 반전 칸",
+      "viewport": {
+        "width": 320,
+        "height": 568,
+        "mobile": true
+      },
+      "cues": [
+        {"at": 0, "watch": "relay"},
+        {"at": 0.2, "scroll": {"scene": "s3", "progress": 0.65, "seconds": 0.4, "sceneProgress": true}},
+        {"at": 0.7, "expect": {"state": "relay-button", "enabled": true}},
+        {"at": 0.7, "click": ["#s3 button[data-action=\"nudge\"]"]},
+        {"at": 2.6, "expect": {"state": "relay-visible", "count": 1}},
+        {"at": 2.6, "scroll": {"scene": "s5", "progress": 0.15, "seconds": 0.5}},
+        {"at": 2.6, "expect": {"state": "v04-mat-ready", "wait": 4, "heightSource": "reference"}},
+        {"at": 2.6, "click": ["#s5 button[data-action=\"mat-before\"]"]},
+        {"at": 2.6, "expect": {"state": "v04-mat-bare", "wait": 5, "beforeValue": 100}},
+        {"at": 2.6, "click": ["#s5 button[data-action=\"mat-lay\"]"]},
+        {"at": 2.6, "expect": {"state": "v04-mat-laid", "wait": 4}},
+        {"at": 2.6, "click": ["#s5 button[data-action=\"mat-after\"]"]},
+        {"at": 2.6, "expect": {"state": "v04-mat-compared", "wait": 5}},
+        {"at": 2.6, "expect": {"state": "v07-mat-copy", "wait": 3}},
+        {"at": 2.6, "scroll": {"scene": "s6", "progress": 0, "seconds": 0}},
+        {"at": 2.6, "reveal": "#s6 .recap-def"},
+        {"at": 2.6, "expect": {"state": "v07-recap-definition", "wait": 4}},
+        {"at": 2.6, "reveal": "#s6 [data-recap='listen']"},
+        {"at": 2.6, "expect": {"state": "v07-recap-empty", "wait": 4}},
+        {"at": 2.6, "expect": {"state": "v07-mat-percent-ready", "wait": 3, "before": 100, "after": 56}},
+        {"at": 2.6, "reveal": "#s6 [data-recap='mat'] .rc-pct"},
+        {"at": 2.6, "expect": {"state": "v07-mat-percent", "wait": 3, "before": 100, "after": 56}},
+        {"at": 2.6, "snapshot": "recap-reference"}
+      ]
+    }
+  ]
+}

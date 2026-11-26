@@ -1,0 +1,127 @@
+{
+  "cases": [
+    {
+      "name": "320×568 · 바닥 톡 43 뒤 S0 정의와 눈금 · 매트 44%와 페이지 문구·글꼴",
+      "viewport": {"width": 320, "height": 568, "mobile": true},
+      "cues": [
+        {"at": 0, "expect": {"state": "v08-intro-ready", "wait": 4}},
+        {"at": 0.6, "click": ["#s0 button[data-action='tap']"]},
+        {"at": 0.6, "expect": {"state": "v08-record", "kind": "thump", "value": 43, "wait": 4}},
+        {"at": 1.6, "expect": {"state": "v08-intro-scale", "wait": 4, "stable": 3}},
+        {"at": 1.6, "expect": {"state": "v10k-intro-layout", "wait": 4, "stable": 3}},
+        {"at": 1.6, "snapshot": "k1-320-first"},
+        {"at": 1.6, "scroll": {"scene": "s5", "progress": 0.15, "seconds": 0}},
+        {"at": 1.6, "expect": {"state": "v04-mat-ready", "wait": 4, "heightSource": "reference"}},
+        {"at": 1.6, "click": ["#s5 button[data-action='mat-before']"]},
+        {"at": 1.6, "expect": {"state": "v04-mat-bare", "wait": 5, "beforeValue": 100}},
+        {"at": 1.6, "click": ["#s5 button[data-action='mat-lay']"]},
+        {"at": 1.6, "expect": {"state": "v04-mat-laid", "wait": 4}},
+        {"at": 1.6, "click": ["#s5 button[data-action='mat-after']"]},
+        {"at": 1.6, "expect": {"state": "v04-mat-compared", "wait": 5}},
+        {"at": 1.6, "scroll": {"scene": "s6", "progress": 0, "seconds": 0}},
+        {"at": 1.6, "expect": {"state": "v08-hud", "scene": "s6", "wait": 4, "stable": 3}},
+        {"at": 1.6, "reveal": "#s6 .recap-def"},
+        {"at": 1.6, "expect": {"state": "v07-recap-definition", "wait": 4, "stable": 3}},
+        {"at": 1.6, "expect": {"state": "v07-mat-percent-ready", "before": 100, "after": 56, "wait": 4}},
+        {"at": 1.6, "reveal": "#s6 [data-recap='mat'] .rc-pct"},
+        {"at": 1.6, "expect": {"state": "v07-mat-percent", "before": 100, "after": 56, "wait": 4, "stable": 3}},
+        {"at": 1.6, "expect": {"state": "v10k-mat-layout", "wait": 4, "stable": 3}},
+        {"at": 1.6, "expect": {"state": "v10k-copy"}},
+        {"at": 1.6, "expect": {"state": "v10k-font"}},
+        {"at": 1.6, "snapshot": "k3-320-mat-percent"}
+      ]
+    },
+    {
+      "name": "390×844 · 첫 쿵 100 뒤 S0 정의와 눈금",
+      "viewport": {"width": 390, "height": 844, "mobile": true},
+      "cues": [
+        {"at": 0, "expect": {"state": "v08-intro-ready", "wait": 4}},
+        {"at": 0.6, "click": ["#s0 button[data-action='drop']"]},
+        {"at": 0.6, "expect": {"state": "v08-record", "kind": "thump", "value": 100, "wait": 4}},
+        {"at": 1.6, "expect": {"state": "v08-intro-scale", "wait": 4, "stable": 3}},
+        {"at": 1.6, "expect": {"state": "v10k-intro-layout", "wait": 4, "stable": 3}},
+        {"at": 1.6, "snapshot": "k1-390-first"}
+      ]
+    },
+    {
+      "name": "844×390 · 첫 쿵 100 뒤 S0 정의와 눈금",
+      "viewport": {"width": 844, "height": 390, "mobile": true},
+      "cues": [
+        {"at": 0, "expect": {"state": "v08-intro-ready", "wait": 4}},
+        {"at": 0.6, "click": ["#s0 button[data-action='drop']"]},
+        {"at": 0.6, "expect": {"state": "v08-record", "kind": "thump", "value": 100, "wait": 4}},
+        {"at": 1.6, "expect": {"state": "v08-intro-scale", "wait": 4, "stable": 3}},
+        {"at": 1.6, "expect": {"state": "v10k-intro-layout", "wait": 4, "stable": 3}},
+        {"at": 1.6, "snapshot": "k1-844-first"}
+      ]
+    },
+    {
+      "name": "1280×720 · 첫 쿵 100 뒤 S0 정의와 눈금",
+      "viewport": {"width": 1280, "height": 720},
+      "cues": [
+        {"at": 0, "expect": {"state": "v08-intro-ready", "wait": 4}},
+        {"at": 0.6, "click": ["#s0 button[data-action='drop']"]},
+        {"at": 0.6, "expect": {"state": "v08-record", "kind": "thump", "value": 100, "wait": 4}},
+        {"at": 1.6, "expect": {"state": "v08-intro-scale", "wait": 4, "stable": 3}},
+        {"at": 1.6, "expect": {"state": "v10k-intro-layout", "wait": 4, "stable": 3}},
+        {"at": 1.6, "snapshot": "k1-1280-first"},
+        {"at": 1.6, "scrollByScreens": 0.12},
+        {"at": 1.6, "expect": {"state": "v10k-intro-layout", "wait": 4, "stable": 3}},
+        {"at": 1.6, "snapshot": "k1-1280-after-scroll"}
+      ]
+    },
+    {
+      "name": "1440×900 · 첫 쿵 100 뒤 S0 정의와 눈금",
+      "viewport": {"width": 1440, "height": 900},
+      "cues": [
+        {"at": 0, "expect": {"state": "v08-intro-ready", "wait": 4}},
+        {"at": 0.6, "click": ["#s0 button[data-action='drop']"]},
+        {"at": 0.6, "expect": {"state": "v08-record", "kind": "thump", "value": 100, "wait": 4}},
+        {"at": 1.6, "expect": {"state": "v08-intro-scale", "wait": 4, "stable": 3}},
+        {"at": 1.6, "expect": {"state": "v10k-intro-layout", "wait": 4, "stable": 3}},
+        {"at": 1.6, "snapshot": "k1-1440-first"},
+        {"at": 1.6, "scrollByScreens": 0.12},
+        {"at": 1.6, "expect": {"state": "v10k-intro-layout", "wait": 4, "stable": 3}},
+        {"at": 1.6, "snapshot": "k1-1440-after-scroll"}
+      ]
+    },
+    {
+      "name": "1280×720 · S4 정착 복귀 설명과 6층 의자 무겹침",
+      "viewport": {"width": 1280, "height": 720},
+      "cues": [
+        {"at": 0, "expect": {"state": "v08-intro-ready", "wait": 4}},
+        {"at": 0.6, "click": ["#s0 button[data-action='drop']"]},
+        {"at": 0.6, "expect": {"state": "v08-record", "kind": "thump", "value": 100, "wait": 4}},
+        {"at": 3, "scroll": {"scene": "s4", "progress": 0.2, "seconds": 0.5, "climaxProgress": true}},
+        {"at": 3, "expect": {"state": "v06b-s4-ready", "wait": 4}},
+        {"at": 4, "scroll": {"scene": "s4", "progress": 0.62, "seconds": 0.85, "climaxProgress": true}},
+        {"at": 4, "expect": {"state": "v06b-s4-listening", "wait": 4, "stable": 3}},
+        {"at": 6.7, "scroll": {"scene": "s4", "progress": 0.925, "seconds": 0.75, "climaxProgress": true}},
+        {"at": 6.7, "expect": {"state": "v09-s4-return", "wait": 4, "stable": 3}},
+        {"at": 8.4, "scroll": {"scene": "s4", "progress": 0.975, "seconds": 0.3, "climaxProgress": true}},
+        {"at": 8.4, "expect": {"state": "v09-s4-settled", "wait": 4, "stable": 3}},
+        {"at": 11.5, "expect": {"state": "v10k-s4-settled", "wait": 3, "stable": 3}},
+        {"at": 11.5, "snapshot": "s4-1280-settled-no-overlap"}
+      ]
+    },
+    {
+      "name": "1440×900 · S4 정착 복귀 설명과 6층 의자 무겹침",
+      "viewport": {"width": 1440, "height": 900},
+      "cues": [
+        {"at": 0, "expect": {"state": "v08-intro-ready", "wait": 4}},
+        {"at": 0.6, "click": ["#s0 button[data-action='drop']"]},
+        {"at": 0.6, "expect": {"state": "v08-record", "kind": "thump", "value": 100, "wait": 4}},
+        {"at": 3, "scroll": {"scene": "s4", "progress": 0.2, "seconds": 0.5, "climaxProgress": true}},
+        {"at": 3, "expect": {"state": "v06b-s4-ready", "wait": 4}},
+        {"at": 4, "scroll": {"scene": "s4", "progress": 0.62, "seconds": 0.85, "climaxProgress": true}},
+        {"at": 4, "expect": {"state": "v06b-s4-listening", "wait": 4, "stable": 3}},
+        {"at": 6.7, "scroll": {"scene": "s4", "progress": 0.925, "seconds": 0.75, "climaxProgress": true}},
+        {"at": 6.7, "expect": {"state": "v09-s4-return", "wait": 4, "stable": 3}},
+        {"at": 8.4, "scroll": {"scene": "s4", "progress": 0.975, "seconds": 0.3, "climaxProgress": true}},
+        {"at": 8.4, "expect": {"state": "v09-s4-settled", "wait": 4, "stable": 3}},
+        {"at": 11.5, "expect": {"state": "v10k-s4-settled", "wait": 3, "stable": 3}},
+        {"at": 11.5, "snapshot": "s4-1440-settled-no-overlap"}
+      ]
+    }
+  ]
+}

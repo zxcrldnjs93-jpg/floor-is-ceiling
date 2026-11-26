@@ -1,0 +1,13 @@
+{
+  "family": "Hahmlet",
+  "axes": "wght 100..900",
+  "license": "SIL Open Font License 1.1",
+  "copyright": "Copyright 2020 The Hahmlet Project Authors (https://github.com/hyper-type/hahmlet)",
+  "reservedFontName": null,
+  "source": "Google Fonts CSS2 API (text= subset), OFL: github.com/google/fonts/ofl/hahmlet/OFL.txt",
+  "fetchedAt": "2026-11-25T14:10:29.967Z",
+  "characters": 655,
+  "hangulSyllables": 543,
+  "bytes": 211988,
+  "cssWeight": "100 900"
+}

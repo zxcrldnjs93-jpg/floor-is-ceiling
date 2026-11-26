@@ -1,0 +1,112 @@
+/* 「중력을 뒤집으면」 디자인 토큰 — lt-opus-design (원본: design/final/tokens.css, DESIGN-SYSTEM.md)
+   빌드가 이 파일을 <head>의 <style>에 그대로 넣는다. 1차는 라이트만 화면에 쓰고, 다크는 토큰만 둔다. */
+
+/* Hahmlet 가변(wght 100–900) 서브셋. SIL Open Font License 1.1 — fonts/OFL.txt, LICENSES.md */
+@font-face {
+  font-family: "Hahmlet";
+  src: url("fonts/hahmlet-subset.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* 색: 낮 도면 */
+  --c-paper: #F5F6F3;
+  --c-paper-2: #ECEEEB;
+  --c-ink: #1B2128;
+  --c-ink-2: #59626A;
+  --c-ink-3: #7E878D;
+  --c-guide: #CDD2D3;
+  --c-concrete: #DCDFDD;
+  --c-aggregate: #99A1A5;
+  --c-mortar: #E7E8E4;
+  --c-wood: #D7B98E;
+  --c-wood-ink: #8B6A43;
+  --c-ceramic: #FFFFFF;
+  --c-kung: #EC4A1F;       /* 쿵(그래픽 전용) */
+  --c-kung-ink: #C23A12;   /* 쿵 색 글자 */
+  --c-kung-tint: #FBE1D8;
+  --c-soft: #2F9A8A;       /* 완충 */
+  --c-soft-ink: #1F7366;   /* 완충 색 글자(v0.3 S5 매트 값, 종이 위 5.2:1) */
+  --c-soft-tint: #D3EAE4;
+  --c-lamp: #FFC76B;
+  --c-led-panel: #161A1E;
+  --c-led: #FF5A2C;
+  --c-led-off: #3A221A;
+  --c-screen: #EAF2F7;
+  --c-tile: #E2ECF2;
+  --c-tile-face: #B7C7D3;
+  --c-focus: #1B2128;
+
+  /* 글꼴 */
+  --font: "Hahmlet", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+  --w-annot: 360; --w-body: 400; --w-ui: 620; --w-h2: 720; --w-display: 800; --w-led: 760;
+  --fs-annot: 12px; --fs-small: 14px; --fs-ui: 15px; --fs-body: 18px; --fs-lead: 21px; --fs-h3: 24px;
+  /* v0.6 F2(R11 1·2) 큰 글 4단: 표시(S0) > 절정(S4 듣기) > 장면 제목(S2·S3·S5·S5-06) > 작은 제목(S6 제목·S4 복귀).
+     장면 제목·절정·작은 제목은 화면 높이에도 묶는다 — 같은 화면에서 장면마다 제목 크기가 달라지지 않게(1280×720: S2·S3·S5 모두 47.5) */
+  --fs-h2: clamp(32px, min(4.4vw, 6.6vh), 64px);
+  --fs-climax: clamp(44px, min(5.6vw, 8.9vh), 84px);
+  --fs-h2s: clamp(28px, min(3.1vw, 4.9vh), 44px);
+  --fs-display: clamp(48px, 6.7vw, 100px);
+  --lh-body: 1.75; --lh-lead: 1.5; --lh-tight: 1.08;
+  --track-display: -0.02em; --track-annot: 0.02em;
+
+  /* 선 굵기 */
+  --lw-cut: 2.5px; --lw-body: 1.75px; --lw-beyond: 1.25px; --lw-thin: 0.75px;
+
+  /* 간격·그리드 */
+  --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 24px; --s-6: 32px; --s-7: 48px; --s-8: 64px; --s-9: 96px;
+  --margin: clamp(20px, 5.5vw, 80px);
+  --gutter: 24px;
+  --content-max: 1280px;
+  --measure: 34ch;
+  --hud-h: 64px;
+
+  /* 모션 */
+  --ease-kung: cubic-bezier(.12, .82, .24, 1);
+  --dur-kung-min: 480ms; --dur-kung-max: 960ms;
+  --ease-flip: cubic-bezier(.65, 0, .35, 1); --dur-flip: 1400ms;
+  --ease-elevator: cubic-bezier(.45, 0, .2, 1); --dur-elevator: 900ms;
+  --dur-led-flicker: 120ms; --dur-crossfade: 420ms;
+  --ease-ui: cubic-bezier(.2, .7, .2, 1); --dur-ui: 200ms;
+
+  --z-drawing: 0; --z-copy: 3; --z-marks: 4; --z-bodies: 5; --z-hud: 10;   /* 물건은 제목 글자 앞(누름도 공이 먼저, v0.2 #10) */
+
+  /* site 뼈대 자리 이름(별칭) */
+  --font-body: var(--font);
+  --font-display: var(--font);
+  --color-page: var(--c-paper);
+  --color-text: var(--c-ink);
+  --color-focus: var(--c-focus);
+  --color-accent: var(--c-kung);
+  --space-section: 0px;
+  --content-width: var(--content-max);
+  --motion-duration: var(--dur-elevator);
+  --motion-ease: var(--ease-elevator);
+  --lt-wave-color: var(--c-kung);
+  --lt-led: var(--c-led);
+  --lt-led-background: var(--c-led-panel);
+
+  /* 'only light': 크롬 자동 다크(강제 어둡게)가 글자를 흰색으로 뒤집지 못하게 한다(v0.2 #7, R11) */
+  color-scheme: only light;
+}
+
+/* 밤 도면(다크): 토큰만. 1차 화면은 라이트로 고정하고, 켤 때 html[data-theme="dark"]를 쓴다 */
+:root[data-theme="dark"] {
+  --c-paper: #17212B; --c-paper-2: #1C2733;
+  --c-ink: #DCE3E8; --c-ink-2: #A3AFB8; --c-ink-3: #6F7C86; --c-guide: #2C3A46;
+  --c-concrete: #26313B; --c-aggregate: #4F5D68; --c-mortar: #202A34;
+  --c-wood: #8E7350; --c-wood-ink: #C9A877; --c-ceramic: #E8ECEF;
+  --c-kung: #FF6A3D; --c-kung-ink: #FF8A65; --c-kung-tint: #4A2418;
+  --c-soft: #4FC2B0; --c-soft-ink: #7FD6C8; --c-soft-tint: #1E3D3A; --c-lamp: #FFD27F;
+  --c-screen: #2A3A48; --c-tile: #24323F; --c-tile-face: #4A5D6C;
+  --c-focus: #DCE3E8;
+  color-scheme: dark;
+}
+
+@media (max-width: 720px) {
+  :root { --fs-body: 16px; --fs-lead: 18px; --hud-h: 56px; --fs-display: 48px; }
+}
+
+html { word-break: keep-all; overflow-wrap: break-word; line-break: strict; }

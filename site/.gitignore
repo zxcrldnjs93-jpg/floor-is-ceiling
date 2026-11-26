@@ -1,0 +1,4 @@
+/dist/
+/dist-single/
+/.build-*/
+/.build.lock

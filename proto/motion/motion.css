@@ -1,0 +1,70 @@
+:root {
+  scroll-timeline: --lt-motion-root block;
+}
+
+:lang(ko) {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.lt-motion-scene {
+  min-block-size: 180svh;
+}
+
+.lt-motion-sticky {
+  position: sticky;
+  inset-block-start: 0;
+  min-block-size: 100svh;
+}
+
+.lt-motion-sr-only {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.lt-motion-word {
+  white-space: nowrap;
+}
+
+.lt-motion-glyph {
+  display: inline-block;
+}
+
+.lt-motion-counter {
+  display: inline-flex;
+  font-variant-numeric: tabular-nums;
+}
+
+.lt-motion-digit {
+  display: inline-block;
+  block-size: 1em;
+  overflow: hidden;
+  line-height: 1;
+}
+
+.lt-motion-digit-strip {
+  display: block;
+}
+
+.lt-motion-digit-strip > span {
+  display: block;
+  block-size: 1em;
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lt-motion-scene,
+  .lt-motion-sticky {
+    min-block-size: auto;
+  }
+
+  .lt-motion-sticky {
+    position: static;
+  }
+}

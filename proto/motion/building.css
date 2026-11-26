@@ -1,0 +1,89 @@
+.lt-building-descent {
+  min-block-size: 295svh;
+}
+
+.lt-building-intro-extension {
+  min-block-size: 80svh;
+}
+
+.lt-building-cushion {
+  min-block-size: 130svh;
+}
+
+.lt-building-stage {
+  position: sticky;
+  inset-block-start: 0;
+  block-size: 100svh;
+  isolation: isolate;
+}
+
+.lt-building-viewport {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  overflow: clip;
+}
+
+.lt-building-stack,
+.lt-building-flip-layer {
+  position: absolute;
+  inset: 0;
+}
+
+.lt-building-stack > * {
+  position: relative;
+  block-size: 100%;
+}
+
+.lt-building-led {
+  display: grid;
+  place-items: center;
+  inline-size: 4.2rem;
+  block-size: 3.25rem;
+  color: var(--lt-led, #ffe299);
+  background: var(--lt-led-background, #262624);
+  border: 1px solid currentColor;
+  border-radius: 0.35rem;
+  font: 700 1.125rem ui-monospace, monospace;
+}
+
+.lt-building-led svg {
+  display: block;
+  inline-size: 2.65rem;
+  fill: currentColor;
+}
+
+.lt-slab-wave-layer {
+  position: absolute;
+  inset-inline: 0;
+  pointer-events: none;
+  color: var(--lt-wave-color, #ad6121);
+}
+
+.lt-slab-wave-slot {
+  position: absolute;
+  inset-block-start: 0;
+}
+
+.lt-slab-wave-arc {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  inline-size: min(48vw, 17rem);
+  block-size: 2.8rem;
+  transform-origin: 50% 0;
+  opacity: 0;
+}
+
+.lt-slab-wave-arc::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: var(--lt-slab-wave-thickness, 2px) solid transparent;
+  border-block-end-color: currentColor;
+  border-radius: 0 0 50% 50%;
+}
+
+[data-building-mirror] {
+  pointer-events: none;
+}

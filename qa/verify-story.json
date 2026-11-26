@@ -1,0 +1,169 @@
+{
+  "cases": [
+    {
+      "name": "보통 속도 S2→S3",
+      "viewport": { "width": 1440, "height": 900 },
+      "cues": [
+        { "at": 0.25, "click": ["#s0 button[data-action='drop']"] },
+        { "at": 1, "click": ["#s0 button[data-action='drop']"] },
+        { "at": 1.75, "click": ["#s0 button[data-action='drop']"] },
+        { "at": 2.5, "click": ["#s0 button[data-action='drop']"] },
+        { "at": 3.25, "click": ["#s0 button[data-action='drop']"] },
+        { "at": 4, "click": ["#s0 button[data-action='drop']"] },
+        { "at": 5.4, "expect": { "state": "records", "min": 6 } },
+        { "at": 5.55, "scroll": { "scene": "s2", "progress": 0.28, "seconds": 0.6 } },
+        { "at": 6.55, "expect": { "state": "replay-pending" } },
+        { "at": 6.55, "watch": "relay" },
+        { "at": 6.65, "scroll": { "scene": "s3", "progress": 0.59, "seconds": 1, "sceneProgress": true } },
+        { "at": 11, "expect": { "state": "relay-visible" } }
+      ]
+    },
+    {
+      "name": "스크롤로 S3 통과",
+      "viewport": { "width": 1440, "height": 900 },
+      "cues": [
+        { "at": 0, "watch": "relay" },
+        { "at": 0.1, "scroll": { "scene": "s3", "progress": 0, "seconds": 0, "sceneProgress": true } },
+        { "at": 0.25, "scroll": { "scene": "s3", "progress": 0.9, "seconds": 1, "sceneProgress": true } },
+        { "at": 2.45, "expect": { "state": "relay-visible" } }
+      ]
+    },
+    {
+      "name": "S3에 멈춰 직접 밀기",
+      "viewport": { "width": 1440, "height": 900 },
+      "cues": [
+        { "at": 0, "watch": "relay" },
+        { "at": 0.1, "scroll": { "scene": "s3", "progress": 0.7, "seconds": 0.8, "sceneProgress": true } },
+        { "at": 1.9, "expect": { "state": "relay-button", "enabled": true } },
+        { "at": 1.9, "click": ["#s3 button[data-action='nudge']"] },
+        { "at": 2.05, "expect": { "state": "relay-button", "enabled": false } },
+        { "at": 4.2, "expect": { "state": "relay-visible", "count": 1 } }
+      ]
+    },
+    {
+      "name": "같은 자리 두 번 뒤집기",
+      "viewport": { "width": 1440, "height": 900 },
+      "cues": [
+        { "at": 0, "scroll": { "scene": "s4", "progress": 0.2, "seconds": 0.8 } },
+        { "at": 1.1, "expect": { "state": "flip-spot" } },
+        { "at": 1.1, "click": ["#s4 [data-action='flip']"] },
+        { "at": 4.2, "expect": { "state": "inverted" } },
+        { "at": 4.25, "click": ["#s4 [data-action='reset-flip']"] },
+        { "at": 6.65, "expect": { "state": "upright" } },
+        { "at": 6.7, "expect": { "state": "same-flip-spot" } },
+        { "at": 6.7, "click": ["#s4 [data-action='flip']"] },
+        { "at": 9.8, "expect": { "state": "inverted" } }
+      ]
+    },
+    {
+      "name": "복귀 뒤 S0 재방문",
+      "viewport": { "width": 390, "height": 844, "mobile": true },
+      "cues": [
+        { "at": 0, "scroll": { "scene": "s4", "progress": 0.2, "seconds": 0.8 } },
+        { "at": 1.1, "click": ["#s4 [data-action='flip']"] },
+        { "at": 4.2, "expect": { "state": "inverted" } },
+        { "at": 4.25, "click": ["#s4 [data-action='reset-flip']"] },
+        { "at": 6.65, "expect": { "state": "upright" } },
+        { "at": 6.65, "watch": "pendulum" },
+        { "at": 6.75, "scroll": { "scene": "s0", "progress": 0, "seconds": 0.8 } },
+        { "at": 7.75, "click": ["#s0 button[data-action='drop']"] },
+        { "at": 9.45, "expect": { "state": "pendulum-safe" } }
+      ]
+    },
+    {
+      "name": "빠른 스크롤 뒤 S6 안내 링크",
+      "viewport": { "width": 1280, "height": 720 },
+      "cues": [
+        { "at": 0.25, "click": ["#s0 button[data-action='drop']"] },
+        { "at": 1.45, "scroll": { "scene": "s7", "progress": 1, "seconds": 3.2, "input": "wheel" } },
+        { "at": 4.8, "scroll": { "scene": "s6", "progress": 0, "seconds": 0 } },
+        { "at": 5.45, "click": ["#s6 [data-flip-missed] [data-action='flip-revisit']"] },
+        { "at": 8.95, "expect": { "state": "inverted" } }
+      ]
+    },
+    {
+      "name": "모바일 터치로 두 번 뒤집기",
+      "viewport": { "width": 390, "height": 844, "mobile": true },
+      "cues": [
+        { "at": 0.25, "click": ["#s0 button[data-action='drop']"] },
+        { "at": 1.6, "scroll": { "scene": "s4", "progress": 0.2, "seconds": 0.8 } },
+        { "at": 2.7, "click": ["#s4 [data-action='flip']"] },
+        { "at": 5.85, "expect": { "state": "inverted" } },
+        { "at": 5.9, "click": ["#s4 [data-action='reset-flip']"] },
+        { "at": 8.4, "expect": { "state": "upright" } },
+        { "at": 8.45, "click": ["#s4 [data-action='flip']"] },
+        { "at": 11.85, "expect": { "state": "inverted" } }
+      ]
+    },
+    {
+      "name": "스크롤 복귀 직후 카드 그림",
+      "viewport": { "width": 1440, "height": 900 },
+      "cues": [
+        { "at": 0.25, "click": ["#s0 button[data-action='drop']"] },
+        { "at": 1.6, "scroll": { "scene": "s4", "progress": 0.2, "seconds": 0.8 } },
+        { "at": 2.75, "scroll": { "scene": "s4", "progress": 0.65, "seconds": 1.1 } },
+        { "at": 6.55, "expect": { "state": "inverted" } },
+        { "at": 6.6, "scroll": { "scene": "s4", "progress": 0.97, "seconds": 1.25 } },
+        { "at": 8.4, "expect": { "state": "upright" } },
+        { "at": 8.4, "scroll": { "scene": "s6", "progress": 0, "seconds": 0.18 } },
+        { "at": 8.65, "expect": { "state": "card-grounded" } }
+      ]
+    },
+    {
+      "name": "움직임 줄이기에서 S1 버튼 뒤 S0 쿵 재생",
+      "viewport": { "width": 390, "height": 844, "mobile": true, "reducedMotion": true },
+      "cues": [
+        { "at": 0.25, "click": ["#s0 button[data-action='drop-high']"] },
+        { "at": 1.15, "click": ["#s0 button[data-action='tap']"] },
+        { "at": 2.15, "expect": { "state": "records", "min": 2 } },
+        { "at": 2.15, "watch": "s0-tape" },
+        { "at": 2.2, "scroll": { "scene": "s1", "progress": 0.15, "seconds": 0.55 } },
+        { "at": 3.05, "click": ["#s1 button[data-action='drag-chair']"] },
+        { "at": 4.05, "click": ["#s1 button[data-action='throw-ball']"] },
+        { "at": 5.05, "expect": { "state": "s1-throw-recorded" } },
+        { "at": 5.1, "scroll": { "scene": "s2", "progress": 0.32, "seconds": 0.55 } },
+        { "at": 8.2, "expect": { "state": "s0-replayed" } }
+      ]
+    },
+    {
+      "name": "키보드 의자 끌기 뒤 카드 PNG의 최대 쿵",
+      "viewport": { "width": 1440, "height": 900 },
+      "cues": [
+        { "at": 0, "watch": "card-png" },
+        { "at": 0.25, "click": ["#s0 button[data-action='drop-high']"] },
+        { "at": 1.6, "expect": { "state": "records", "min": 1 } },
+        { "at": 1.65, "scroll": { "scene": "s1", "progress": 0.15, "seconds": 0.7 } },
+        { "at": 2.7, "enter": "#s1 button[data-action='drag-chair']" },
+        { "at": 4.6, "expect": { "state": "chair-index" } },
+        { "at": 4.65, "scroll": { "scene": "s0", "progress": 0, "seconds": 0.6 } },
+        { "at": 5.6, "click": ["#s0 button[data-action='tap']"] },
+        { "at": 6.25, "click": ["#s0 button[data-action='tap']"] },
+        { "at": 6.9, "click": ["#s0 button[data-action='tap']"] },
+        { "at": 7.55, "click": ["#s0 button[data-action='tap']"] },
+        { "at": 8.2, "click": ["#s0 button[data-action='tap']"] },
+        { "at": 8.85, "click": ["#s0 button[data-action='tap']"] },
+        { "at": 9.5, "click": ["#s0 button[data-action='tap']"] },
+        { "at": 10.15, "click": ["#s0 button[data-action='tap']"] },
+        { "at": 10.8, "click": ["#s0 button[data-action='tap']"] },
+        { "at": 11.45, "click": ["#s0 button[data-action='tap']"] },
+        { "at": 12.1, "click": ["#s0 button[data-action='tap']"] },
+        { "at": 12.75, "click": ["#s0 button[data-action='tap']"] },
+        { "at": 14, "scroll": { "scene": "s6", "progress": 0, "seconds": 0 } },
+        { "at": 15.6, "click": ["#s6 button[data-action='save']"] },
+        { "at": 17, "expect": { "state": "card-png" } }
+      ]
+    },
+    {
+      "name": "S5만 완료한 카드의 최대 쿵",
+      "viewport": { "width": 1440, "height": 900 },
+      "cues": [
+        { "at": 0.25, "scroll": { "scene": "s5", "progress": 0.15, "seconds": 0 } },
+        { "at": 1.6, "click": ["#s5 button[data-action='mat-before']"] },
+        { "at": 3.3, "click": ["#s5 button[data-action='mat-lay']"] },
+        { "at": 4.5, "click": ["#s5 button[data-action='mat-after']"] },
+        { "at": 6.8, "scroll": { "scene": "s6", "progress": 0, "seconds": 0.25 } },
+        { "at": 7.9, "expect": { "state": "mat-card-peak" } }
+      ]
+    }
+  ]
+}

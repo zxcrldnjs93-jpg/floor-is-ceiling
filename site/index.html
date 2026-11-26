@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="only light">
+  <!-- build:metadata -->
+  <link rel="preload" href="fonts/hahmlet-subset.woff2" as="font" type="font/woff2" crossorigin>
+  <style>
+    /* build:tokens */
+  </style>
+  <link rel="stylesheet" href="styles/site.css">
+  <script src="ui/section.js" defer></script>
+  <script src="ui/stage.js" defer></script>
+  <script src="ui/hud.js" defer></script>
+  <script src="ui/card.js" defer></script>
+  <!-- build:modules -->
+</head>
+<body>
+  <a class="skip" href="#main">본문으로 건너뛰기</a>
+
+  <!-- 머리띠: U-01 작품명 · U-02 엘리베이터 미니맵 · U-03 층 알림 · U-04 움직임 일시정지 -->
+  <header class="hud">
+    <span class="brand">중력을 뒤집으면</span>
+    <div class="hud-right">
+      <div class="lift" data-lift role="img" aria-label="엘리베이터 표시: 지금 7층, 위층">
+        <svg class="lift-arrow" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M1 3h10L6 10z"/></svg>
+        <span class="cell is-on" data-lift-floor="7" aria-hidden="true"><span class="dots">7F</span></span>
+        <span class="cell" data-lift-floor="6" aria-hidden="true"><span class="dots">6F</span></span>
+        <span class="cell" data-lift-floor="5" aria-hidden="true"><span class="dots">5F</span></span>
+      </div>
+      <!-- v0.8 U-02b(story): 엘리베이터 옆 보이는 글 "지금 7층 · 위층". 낭독은 엘리베이터 이름(U-02)이 같은 말로 맡는다(aria-hidden).
+           상태는 엔진 #main[data-current-floor][data-current-view](HOOKS), 쓰기는 ui/hud.js. 가장 긴 글 두 벌(.ln-ghost)로 폭을 미리 잡아
+           글이 바뀌어도 머리띠가 밀리지 않는다. 휴대폰(폭 480 이하)은 '지금'을 빼고 층/위아래 두 줄(엘리베이터 표시판처럼) -->
+      <span class="lift-now" data-lift-now aria-hidden="true">
+        <span class="ln-txt"><span class="ln-now">지금 </span><b class="ln-floor">7층</b><span class="ln-sep"> · </span><span class="ln-view">위층</span></span>
+        <span class="ln-ghost"><span class="ln-now">지금 </span><b class="ln-floor">7층</b><span class="ln-sep"> · </span><span class="ln-view">아래층</span></span>
+        <span class="ln-ghost"><span class="ln-now">지금 </span><b class="ln-floor">세 층</b><span class="ln-sep"> </span><span class="ln-view">모두</span></span>
+      </span>
+      <p class="sr" data-floor-live aria-live="polite"></p>
+      <!-- 토글 두 개는 숨어 있어도 자리를 잡는다(site.css .toggle[hidden]) → 켜질 때·문구가 바뀔 때 머리띠가 밀리지 않는다(레드팀 v0.2.2 6절, 320 CLS).
+           v0.3 U-05 소리: 기본 꺼짐. 켜고 끄기·AudioContext는 엔진(HOOKS 9.2), 라벨은 ui/hud.js. 좁은 화면에서는 아이콘만 보이고 이름은 그대로 읽힌다.
+           v0.3.5 접근성: 보이는 라벨이 지금 할 동작을 말하므로("소리 켜기" ↔ "소리 끄기") aria-pressed는 쓰지 않는다(겹쳐 쓰면 "소리 끄기, 눌림"처럼 두 번 말한다).
+           상태는 data-pressed="true|false"(모양·라벨만 이 값을 본다) -->
+      <div class="toggles">
+        <button type="button" id="sound-toggle" class="toggle toggle-sound" data-action="sound" data-pressed="false" hidden>
+          <svg viewBox="0 0 16 14" aria-hidden="true" focusable="false"><path d="M1.5 5h2.6L8 1.8v10.4L4.1 9H1.5z" fill="currentColor"/><path class="ic-off" d="M10.4 4.6l4.2 4.8M14.6 4.6l-4.2 4.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path class="ic-on" d="M10.3 4.4a3.6 3.6 0 0 1 0 5.2M12.4 2.4a6.4 6.4 0 0 1 0 9.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <span class="tg-label"><span data-sound-label>소리 켜기</span><span class="tg-ghost" aria-hidden="true">소리 끄기</span></span>
+        </button>
+        <button type="button" id="motion-pause" class="toggle" data-pressed="false" hidden>
+          <svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><g class="ic-off"><rect x="2.5" y="2" width="3" height="10" rx="1" fill="currentColor"/><rect x="8.5" y="2" width="3" height="10" rx="1" fill="currentColor"/></g><path class="ic-on" d="M3.5 2.2v9.6L11.8 7z" fill="currentColor"/></svg>
+          <span class="tg-label"><span data-pause-label>움직임 일시정지</span><span class="tg-ghost" aria-hidden="true">움직임 다시 켜기</span></span>
+        </button>
+      </div>
+    </div>
+    <!-- 머리띠 아래 작은 알림: 소리 켜기 실패(엔진이 글을 쓴다, 비면 안 보임)와 U-08 첫 진동 안내(3초 뒤 엔진이 숨김) -->
+    <p class="hud-note" data-sound-status role="status"></p>
+    <p class="hud-note" data-cue="u-08" role="status" hidden>아래층에서 들을 때만 휴대폰이 짧게 떨립니다. 오른쪽 위 일시정지 버튼을 누르면 멈춥니다.</p>
+  </header>
+
+  <main id="main" tabindex="-1" data-page-stage data-perspective="upstairs">
+
+    <!-- S0 · 7층, 나의 집 -->
+    <section class="scene" id="s0" data-scene="s0" data-floor="7" aria-labelledby="s0-title">
+      <div class="panel" data-motion="slab-intro" data-motion-sticky>
+        <div class="stage" data-stage="s0" data-physics="slab">
+          <svg class="room" data-art-room aria-hidden="true" focusable="false"></svg>
+          <div class="strip" data-record-strip="7-6" aria-hidden="true"></div>
+          <div class="lt-slab-wave-layer" data-wave-layer="7-6" aria-hidden="true"></div>
+          <div class="plamp" data-physics-lamp="6" aria-hidden="true"></div>
+          <div class="hit" data-hit="7" data-action="tap" aria-hidden="true"></div>
+          <div class="pbody" data-physics-body="7:ball" data-action="drop" aria-hidden="true"></div>
+          <div class="pbody" data-physics-body="7:chair" aria-hidden="true"></div>
+          <div class="pbody" data-physics-body="7:cup" aria-hidden="true"></div>
+          <span class="react" data-react="6" aria-hidden="true" hidden>…?</span>
+        </div>
+        <div class="copy">
+          <h1 id="s0-title"><span class="display" data-place="s0-line1">내 바닥은,</span> <span class="display" data-place="s0-line2">누군가의 천장입니다.</span></h1>
+          <!-- S0-02(v0.2.2): 모바일 줄바꿈 "…집입니다. / 바닥을 톡, 또는 방 위쪽을 눌러 / 공을 떨어뜨려 보세요." 폭 360 이하에서는 첫 문장을 숨긴다(엘리베이터 7F·U-03a가 같은 정보) -->
+          <!-- v0.8(story S0-02): 할 일과 결과 두 문장. 휴대폰은 두 문장을 두 줄로. 폭 360 이하 첫 문장 숨김은 그대로(머리띠 U-02b가 같은 정보) -->
+          <p class="lead" data-place="s0-intro"><span class="intro-a">여기는 7층, 당신의 집입니다.<br></span>방 위쪽을 눌러 보세요. <br class="m-only">누른 높이에서 공이 떨어집니다.</p>
+          <p class="keys" data-place="s0-keys">
+            <button type="button" class="btn btn-ghost btn-sm" data-action="drop" hidden>공 떨어뜨리기</button>
+            <button type="button" class="btn btn-ghost btn-sm" data-action="drop-high" hidden>높은 데서 떨어뜨리기</button>
+            <button type="button" class="btn btn-ghost btn-sm" data-action="tap" hidden>바닥 톡</button>
+          </p>
+          <p class="cue" data-place="s0-after" data-cue="s0-after" hidden>방금 그 쿵, 6층 천장에 닿았습니다.<br>더 높이에서 떨어뜨리면, 더 크게 울립니다.</p>
+          <!-- v1.0-K(story S0-07): 띠 주석 = 쿵 지수 정의와 눈금(기준 100과 양 끝, 버튼으로 다시 낼 수 있는 실측값만). 숫자는 정적 글(qa가 엔진값과 대조).
+               휴대폰 줄바꿈 "…공 100 · / 천장 가까이 공 200". 'dB 아님'은 S2 U-06·S6-16·바닥글 -->
+          <!-- 넓은 화면은 6층 조명 오른쪽 좁은 칸에 세로 미니 눈금(위 = 큰 값, S6 눈금과 같은 문법)으로 선다(stage.js .is-col). 글 순서(DOM)는 그대로 -->
+          <p class="band-note band-ruler" data-place="s0-band" data-cue="s0-band" hidden><span class="br-k">쿵 지수<span class="br-def">(바닥이 받은 충격의 세기)</span>:</span> <br class="m-only"><span class="br-list"><span class="br-i"><span class="br-l">바닥 톡</span> <b>43</b></span><span class="br-sep"> · </span><span class="br-i"><span class="br-l">방 절반 높이 공</span> <b>100</b></span><span class="br-sep"> · </span><br class="m-only"><span class="br-i"><span class="br-l">천장 가까이 공</span> <b>200</b></span></span></p>
+          <output class="sr" data-kung-reading></output>
+          <p class="sr" data-fx="first-impact" role="status"></p>
+          <a class="scroll-hint" data-place="s0-down" href="#s2">아래층으로 <svg viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></a>
+        </div>
+      </div>
+    </section>
+
+    <!-- S1 · 7층, 쿵 기록 확장 [1.1] (v0.3, HOOKS 9.1). S0와 같은 방·같은 바디(엔진이 이름으로 묶는다).
+         모듈이 준비되기 전에는 장면 전체가 hidden이다(없으면 S0 → S2로 잇는다) -->
+    <section class="scene" id="s1" data-scene="s1" data-floor="7" aria-labelledby="s1-title" hidden>
+      <div class="panel" data-motion="record-extend" data-motion-sticky>
+        <div class="stage" data-stage="s1" data-physics="gesture">
+          <svg class="room" data-art-room aria-hidden="true" focusable="false"></svg>
+          <div class="strip" data-record-strip="7-6" aria-hidden="true"></div>
+          <div class="lt-slab-wave-layer" data-wave-layer="7-6" aria-hidden="true"></div>
+          <div class="plamp" data-physics-lamp="6" aria-hidden="true"></div>
+          <div class="pbody" data-physics-body="7:ball" data-physics-gesture="throw-ball" aria-hidden="true"></div>
+          <div class="pbody" data-physics-body="7:chair" data-physics-gesture="drag-chair" aria-hidden="true"></div>
+          <div class="pbody" data-physics-body="7:cup" aria-hidden="true"></div>
+          <span class="react" data-react="6" aria-hidden="true" hidden>…?</span>
+          <!-- 의자를 꾹 누르는 0.3초 동안 차오르는 고리(터치). 자리(left·top = 누른 점)와 hidden은 엔진 -->
+          <span class="grab-ring" data-grab-ring aria-hidden="true" hidden></span>
+        </div>
+        <div class="copy">
+          <div data-place="s1-note">
+            <h2 id="s1-title" class="s1-h">던져도, 끌어도 됩니다. <br class="d-only">전부 바닥에 새겨집니다.</h2>
+            <p class="cue" data-cue="s1-03" hidden>의자는 꾹 눌러 끌고, 공은 잡아 던질 수 있어요.</p>
+          </div>
+          <!-- v0.3.1: 버튼은 안내와 따로 놓는다(휴대폰은 화면 아래 엄지 자리 — 공이 굴러오는 바닥선 위를 비운다) -->
+          <p class="keys" data-place="s1-keys">
+            <button type="button" class="btn btn-ghost btn-sm" data-action="drag-chair" hidden>의자 끌기</button>
+            <button type="button" class="btn btn-ghost btn-sm" data-action="throw-ball" hidden>세게 던지기</button>
+          </p>
+          <p class="sr" data-fx="gesture-feedback" role="status"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- S2 · 6층, 같은 쿵 다른 자리 -->
+    <section class="scene" id="s2" data-scene="s2" data-floor="6" aria-labelledby="s2-title">
+      <div class="panel" data-motion="replay-cue" data-motion-sticky>
+        <div class="stage" data-stage="s2" data-physics="replay-pendulum">
+          <svg class="room" data-art-room aria-hidden="true" focusable="false"></svg>
+          <div class="strip" data-record-strip="7-6" aria-hidden="true"><span data-replay-cursor hidden></span></div>
+          <div class="lt-slab-wave-layer" data-wave-layer="7-6" aria-hidden="true"></div>
+          <div class="plamp" data-physics-lamp="6" aria-hidden="true"></div>
+          <div class="pbody" data-physics-body="6:chair" aria-hidden="true"></div>
+          <div class="pbody" data-physics-body="6:mug" aria-hidden="true"></div>
+          <span class="react" data-react="laptop" aria-hidden="true" hidden>…?</span>
+        </div>
+        <div class="copy">
+          <div data-place="s2-copy">
+            <p class="lead">6층입니다.</p>
+            <h2 id="s2-title" class="h2">아까 그 쿵, 여기서는 이렇게 들립니다.</h2>
+            <p class="cue" data-cue="s2-after" hidden>같은 ‘쿵’, 듣는 자리가 다릅니다.</p>
+            <p class="cue" data-cue="s2-empty" hidden>조용히 지나가셨네요. 대신 공이 한 번 떨어졌습니다.</p>
+            <p class="cue cue-sound" data-cue="s2-06" hidden>오른쪽 위에서 소리를 켜면, 여기서는 더 둔하고 크게 들립니다.</p>
+            <p class="actions"><button type="button" class="btn btn-ghost btn-sm" data-action="replay" hidden>다시 듣기</button></p>
+            <p class="u06">쿵 지수: 이 페이지의 물리엔진이 계산한 충격의 세기(상대값). 실제 소음(dB)이 아닙니다.</p>
+            <p class="sr" data-fx="replay-feedback" role="status"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- S3 · 5층, 6층도 누군가의 위층 -->
+    <section class="scene" id="s3" data-scene="s3" data-floor="5" aria-labelledby="s3-title">
+      <div class="panel" data-motion="floor-continuation" data-motion-sticky>
+        <div class="stage" data-stage="s3" data-physics="transmit-impact">
+          <svg class="room" data-art-room aria-hidden="true" focusable="false"></svg>
+          <div class="strip" data-record-strip="6-5" aria-hidden="true"></div>
+          <div class="lt-slab-wave-layer" data-wave-layer="6-5" aria-hidden="true"></div>
+          <div class="plamp" data-physics-lamp="5" aria-hidden="true"></div>
+          <div class="hit" data-hit="6" data-action="nudge" aria-hidden="true"></div>
+          <div class="pbody" data-physics-body="6:chair" data-action="nudge" aria-hidden="true"></div>
+          <div class="pbody" data-physics-body="6:mug" aria-hidden="true"></div>
+          <div class="pbody" data-physics-body="5:plant" aria-hidden="true"></div>
+          <span class="react" data-react="5" aria-hidden="true" hidden>…?</span>
+        </div>
+        <div class="copy">
+          <div data-place="s3-top">
+            <p class="lead">회의가 끝났습니다. 6층이 일어섭니다.</p>
+            <p class="actions"><button type="button" class="btn btn-ghost btn-sm" data-action="nudge" hidden>6층 의자 밀기</button></p>
+          </div>
+          <h2 id="s3-title" class="h2" data-place="s3-key">6층도, 누군가의 위층입니다.</h2>
+          <p data-place="s3-below">그리고 5층 아래에도.</p>
+          <p class="sr" data-fx="floor-echo" role="status"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- S4 · 절정: 중력을 뒤집으면. 회전은 data-flip-layer(무대)만. 버튼·핵심 카피·머리띠는 밖 -->
+    <section class="scene" id="s4" data-scene="s4" data-floor="7 6 5" aria-labelledby="s4-title">
+      <div class="panel" data-motion="flip-stage" data-motion-sticky>
+        <div class="stage" data-stage="s4" data-physics="reverse-gravity">
+          <div class="flip-layer lt-building-flip-layer" data-flip-layer>
+            <svg class="room" data-art-room aria-hidden="true" focusable="false"></svg>
+            <div class="strip" data-record-strip="7-6" aria-hidden="true"></div>
+            <div class="strip" data-record-strip="6-5" aria-hidden="true"></div>
+            <div class="lt-slab-wave-layer" data-wave-layer="7-6" aria-hidden="true"></div>
+            <div class="lt-slab-wave-layer" data-wave-layer="6-5" aria-hidden="true"></div>
+            <div class="lt-slab-wave-layer" data-wave-layer="6-7" aria-hidden="true"></div>
+            <div class="lt-slab-wave-layer" data-wave-layer="5-6" aria-hidden="true"></div>
+            <div class="plamp" data-physics-lamp="6" aria-hidden="true"></div>
+            <div class="plamp" data-physics-lamp="5" aria-hidden="true"></div>
+            <div class="pbody" data-physics-body="7:ball" aria-hidden="true"></div>
+            <div class="pbody" data-physics-body="7:chair" aria-hidden="true"></div>
+            <div class="pbody" data-physics-body="7:cup" aria-hidden="true"></div>
+            <div class="pbody" data-physics-body="6:chair" aria-hidden="true"></div>
+            <div class="pbody" data-physics-body="6:mug" aria-hidden="true"></div>
+            <div class="pbody" data-physics-body="5:plant" aria-hidden="true"></div>
+            <!-- 글 블록 번호는 엔진의 방을 따른다: copy:1 = 7층에 떠 있는 블록, copy:0 = 5층에 떠 있는 블록 -->
+            <p class="block" data-physics-body="copy:1" aria-hidden="true">세 집이 한 줄로 쌓여 있습니다.</p>
+            <p class="block" data-physics-body="copy:0" aria-hidden="true">중력을 뒤집으면?</p>
+            <span class="react" data-react="7" data-building-upright aria-hidden="true" hidden>…?</span>
+          </div>
+          <!-- v0.6 F2(motion R10-5): 480 이하 준비·회전 동안 정방향으로 읽히는 S4-02(회전층 밖, arch가 hidden을 켜고 끈다). 낭독은 #s4-title이 한 번 -->
+          <p class="s4-question" data-s4-question aria-hidden="true" hidden>중력을 뒤집으면?</p>
+        </div>
+        <div class="copy">
+          <h2 id="s4-title" class="sr">세 집이 한 줄로 쌓여 있습니다. 중력을 뒤집으면?</h2>
+          <div class="controls" data-place="s4-controls">
+            <!-- v0.6 F2b(story S4-23 · contest R2-4): 첫 뒤집기를 마치고 돌아온 뒤에만 보이는 주 행동. 상태 [data-flip-again]·hidden은 arch.
+                 JS가 있으면 arch가 S5로 스크롤하고 지금 차례 버튼에 초점(cushion-revisit과 같은 처리) -->
+            <a class="btn btn-primary s4-next" href="#s5" data-action="s4-next" hidden>다시 7층으로 <svg viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></a>
+            <button type="button" class="btn btn-primary" data-action="flip" aria-pressed="false" hidden>
+              <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3.2 9.5A5 5 0 1 0 4.6 4.3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M2.4 1.8v3.6h3.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span data-flip-label>중력 뒤집기</span>
+            </button>
+            <p class="hint">계속 내리면, 건물이 뒤집어집니다.</p>
+          </div>
+          <div class="callout" data-flip-cue="listen" data-place="s4-listen">
+            <p class="display">이제 당신이 아래층입니다.</p>
+            <p class="s406" data-cue="s4-06">6층의 의자 소리입니다. 회의를 마치고 일어났을 뿐인데.</p>
+            <button type="button" class="btn btn-primary" data-action="reset-flip" hidden>원래대로 돌리기</button>
+            <p class="s419" data-cue="s4-19" hidden>다시 바로 들면, 중력이 돌아옵니다.</p>
+          </div>
+          <div class="callout callout-return" data-flip-cue="return" data-place="s4-return">
+            <p class="lead">중력이 돌아오면 —</p>
+            <p class="h2">우리는 모두 <br class="m-only">누군가의 위층이고, <br>누군가의 아래층입니다.</p>
+          </div>
+          <!-- v0.3 휴대폰으로 뒤집기(HOOKS 9.3, S4-10~S4-16). 지원하는 모바일에서만 엔진이 hidden을 푼다(데스크톱·인앱·센서 없음은 늘 숨김).
+               상태는 section#s4[data-sensor-state]: idle · requesting · tilting · inverted · returned · fallback -->
+          <div class="sensor" data-place="s4-sensor" data-sensor-offer hidden>
+            <svg class="sensor-phone" viewBox="0 0 44 48" aria-hidden="true" focusable="false"><rect x="15" y="9" width="17" height="30" rx="3.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M21 13.5h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M9 34.5A15.5 15.5 0 0 1 10.6 11" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-dasharray="3 3"/><path d="M6.4 13.8l4.4-3.2.9 5.3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <div class="sensor-body">
+              <p class="sensor-title">휴대폰을 거꾸로 들어 보세요.</p>
+              <p class="sensor-small" data-cue="s4-16">화면 회전 잠금을 켜 두면 더 잘 됩니다.</p>
+              <p class="sensor-actions">
+                <button type="button" class="btn btn-primary btn-sm" data-action="sensor-enable" hidden>휴대폰으로 뒤집기</button>
+                <button type="button" class="btn-link" data-action="sensor-use-button" hidden>버튼으로 볼게요</button>
+              </p>
+              <p class="sensor-fine">기울기 센서는 이 장면에서만 쓰고, 어디에도 저장하지 않습니다.</p>
+            </div>
+          </div>
+          <!-- 센서 알림 묶음: 버튼 바로 위. 상태 글(S4-13·S4-14 등, 엔진이 씀, 비면 안 보임)과 S4-17·S4-18·S4-20 큐가 겹치지 않고 쌓인다 -->
+          <div class="sensor-msgs" data-place="s4-msgs">
+            <p class="sensor-status" data-sensor-status role="status"></p>
+            <p class="sensor-status" data-cue="s4-17" hidden>화면이 같이 돌아갔어요. 버튼으로 뒤집어 볼까요?</p>
+            <p class="sensor-status" data-cue="s4-18" hidden>스크롤로 이어서 뒤집습니다.</p>
+            <p class="sensor-status is-quiet" data-cue="s4-20" hidden>외부 브라우저에서 열면 휴대폰을 직접 뒤집을 수 있어요.</p>
+          </div>
+          <p class="sr" data-perspective-label role="status"></p>
+          <p class="sr" data-fx="perspective-feedback" role="status"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- S5 · 다시 7층, 매트 한 장 [1.1] (v0.3, HOOKS 9.1). 같은 공(7:ball)·같은 높이로 맨바닥 한 번, 매트 위 한 번.
+         시험 상태는 section의 data-mat-test(ready → dropping-before → before → laid → dropping-after → done). 모듈 준비 전에는 장면 전체가 hidden.
+         떨어뜨릴 높이는 [data-stage="s5"]의 data-drop-height(0 = 방 윗면, 1 = 바닥, 없으면 0.5) → 점선·치수선이 그 높이에 선다 -->
+    <section class="scene" id="s5" data-scene="s5" data-floor="7" data-mat-test="ready" aria-labelledby="s5-title" hidden>
+      <div class="panel" data-motion="mat-test" data-motion-sticky>
+        <div class="stage" data-stage="s5" data-physics="mat-test">
+          <svg class="room" data-art-room aria-hidden="true" focusable="false"></svg>
+          <div class="strip" data-record-strip="7-6" aria-hidden="true"></div>
+          <div class="lt-slab-wave-layer" data-wave-layer="7-6" aria-hidden="true"></div>
+          <div class="plamp" data-physics-lamp="6" aria-hidden="true"></div>
+          <!-- 매트(완충재 단면 무늬). 깔면 엔진이 hidden을 푼다 → 말려 있던 매트가 펼쳐진다(움직임 줄이기에서는 바로) -->
+          <div class="pbody mat" data-mat aria-hidden="true" hidden></div>
+          <div class="mat-roll" data-mat-roll data-action="mat-lay" aria-hidden="true"></div>
+          <div class="pbody" data-physics-body="7:ball" aria-hidden="true"></div>
+        </div>
+        <div class="copy">
+          <div data-place="s5-head">
+            <h2 id="s5-title" class="h2">다시 7층.</h2>
+            <p class="lead" data-cue="s5-08" hidden>당신의 가장 큰 쿵, <span class="nowrap">그 높이에서</span> <span class="nowrap">한 번 더.</span></p>
+            <p class="lead" data-cue="s5-08b" hidden>방 높이의 절반에서, 공을 한 번 떨어뜨려 봅니다.</p>
+            <p class="lead s502">같은 공, 같은 높이. 이번엔 매트 위에서.</p>
+          </div>
+          <!-- S5-03 시험 순서(차례가 아닌 버튼은 엔진이 aria-disabled="true" → 흐리게) -->
+          <ol class="steps" data-place="s5-steps">
+            <li><button type="button" class="btn btn-ghost btn-sm step" data-action="mat-before" hidden>맨바닥에 떨어뜨리기</button></li>
+            <li><button type="button" class="btn btn-ghost btn-sm step" data-action="mat-lay" hidden>매트 깔기</button></li>
+            <li><button type="button" class="btn btn-ghost btn-sm step" data-action="mat-after" hidden><span class="t-first">매트 위에 떨어뜨리기</span><span class="t-again">매트 위에 다시 떨어뜨리기</span></button></li>
+          </ol>
+          <div class="mat-result" data-place="s5-result">
+            <p class="cue" data-mat-result hidden>쿵 <b class="v-before" data-impact-before>—</b> → <b class="v-after" data-impact-after>—</b>. <br class="d-only">쿵 지수가 <b data-impact-reduction>—</b>% 줄었습니다.</p>
+            <p class="s507" data-cue="s5-07">이 수치는 이 페이지 물리엔진의 값입니다. 실제 매트는 가벼운 충격엔 효과가 크고, 높은 데서 물건이 떨어지는 큰 충격엔 효과가 적습니다.</p>
+          </div>
+          <p class="cue mat-lamp" data-place="s5-lamp" data-cue="s5-05" hidden>6층 조명이 덜 흔들립니다.</p>
+          <p class="h2 mat-key" data-place="s5-key" data-cue="s5-after" hidden>배려는 거창하지 않습니다.<br>매트 한 장입니다.</p>
+          <p class="sr" data-fx="mat-feedback" role="status"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- S6 · 끝 화면: 엘리베이터 안 -->
+    <section class="scene scene-end" id="s6" data-scene="s6" data-floor="7" aria-labelledby="s6-title">
+      <div class="panel" data-motion="result-reveal">
+        <div class="stage" data-stage="s6" data-physics="result-record">
+          <svg class="room" data-art-room aria-hidden="true" focusable="false"></svg>
+        </div>
+        <div class="end">
+          <h2 id="s6-title" class="h2 title" data-result-headline>오늘 이 페이지에서, 당신은 이런 위층이었습니다.</h2>
+          <div class="board" data-place="s6-board">
+            <div class="sheet">
+              <article class="card" data-result-canvas aria-labelledby="card-type">
+                <div class="frame-o"></div><div class="frame-i"></div>
+                <div class="panel-led"><span class="lbl" data-result-label>최대 쿵</span><span class="num" data-result-peak>0</span></div>
+                <!-- v0.3 카드 v2 보조 줄 S6-10(S5를 마쳤을 때만 엔진이 hidden을 푼다). 큰 숫자는 늘 최대 쿵 -->
+                <p class="matline" data-result-mat hidden>매트 위에선 쿵 <b class="v-before" data-result-mat-before>—</b> → <b class="v-after" data-result-mat-after>—</b></p>
+                <div class="side-t">
+                  <p class="type" id="card-type" data-result-title>사뿐 고양이형</p>
+                  <p class="quip" data-result-copy>발소리가 너무 작아서, 아래층은 이 집이 빈 줄 압니다. 택배 기사님도요.</p>
+                </div>
+                <div class="mini"><svg data-card-mini aria-hidden="true" focusable="false"></svg></div>
+                <p class="close">내 바닥은, 누군가의 천장.</p>
+                <!-- v0.3 S6-09 배지: 센서로 실제로 뒤집었을 때만 -->
+                <p class="badge" data-result-sensor hidden><svg viewBox="0 0 16 20" aria-hidden="true" focusable="false"><rect x="3" y="2" width="10" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M6.5 15h3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>휴대폰으로 직접 뒤집음</p>
+                <div class="tb">
+                  <div><span class="k">작품</span><b>중력을 뒤집으면</b></div>
+                  <div><span class="k">기록</span><b data-result-detail>쿵 0번</b></div>
+                  <div><span class="k">층</span><b>7F</b></div>
+                  <div data-cell><span class="k">주소</span><b class="url" data-result-url></b></div>
+                </div>
+              </article>
+            </div>
+          </div>
+          <div class="side">
+            <!-- v0.5 E1 S6-13·S6-13b(story v5): 사용자 기록이 0일 때만(arch가 #s6[data-result-state="empty"]). 카드 숫자는 정직하게 0 그대로.
+                 이 상태에서는 [7층으로]가 주 버튼, [카드 저장]은 보조 모양(site.css). 카드 PNG에는 들어가지 않는다(카드 밖).
+                 동작 intro-revisit(arch): S0 맨 위 + [공 떨어뜨리기]에 초점, 기록은 지우지 않는다. JS가 없으면 #s0로 이동만 -->
+            <!-- v0.6 F2(story R8-3·6·8): 기록 0 안에서 매트 시험만 한 사람은 S6-13m(arch #s6[data-result-empty="mat"]). 한 문장만 보인다(site.css) -->
+            <div class="end-empty" data-result-empty>
+              <p class="e1-none">아직 쿵 0번이에요.<br class="m-only"> 집에서 공 하나면 이 카드가 달라집니다.</p>
+              <p class="e1-mat">매트 시험만 했어요.<br class="m-only"> 집에서 공 하나면 이 카드가 달라집니다.</p>
+              <a class="btn btn-primary btn-sm" href="#s0" data-action="intro-revisit">집으로 <svg viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M6 10.5V2M2.5 5.5 6 2l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+            </div>
+            <!-- v0.7 F3-7(contest 2 · global R2 '주 행동은 하나'): 채운 버튼은 하나 — 기록 있음 [카드 저장](휴대폰 폭 꽉, 얻는 것 "PNG 1장"),
+                 [공유하기]는 보조. [처음부터 다시]는 여기서 빼고 맨 끝 행동 줄(S7-09)의 글 링크로 옮겼다. 빈 상태는 E1 [집으로]가 주 버튼(site.css) -->
+            <div class="actions">
+              <button type="button" class="btn btn-primary btn-lift btn-save" data-action="save" hidden><span class="ring" aria-hidden="true"></span>카드 저장<span class="btn-sub">PNG 1장</span></button>
+              <button type="button" class="btn btn-ghost btn-lift" data-action="share" hidden><span class="ring" aria-hidden="true"></span>공유하기</button>
+            </div>
+            <p class="feedback" data-fx="share-feedback" role="status"></p>
+            <p class="share-url" data-share-url hidden></p>
+            <p class="disclaim">이 페이지에서 한 행동으로 정한 장난스러운 유형이에요. 실제 생활을 판정하지 않아요.</p>
+          </div>
+          <!-- v0.5 E2 S6-14(story v5): 승강기 층별 안내판. 세 칸이 같은 문법 — 층 칩 + 작은 제목 + '무엇 → 어디' 값 줄(화살표 열을 맞춘다).
+               값은 arch가 엔진 상태에서 채운다(story 연결 2절, 화면에 이미 나온 값과 같게): 칸 li[data-recap="kung|relay|mat"]의
+               data-state="empty|done", [data-recap-from]·[data-recap-to] 글, 화면 낭독 [data-recap-sr] 글. 아래 기본 글 = 빈 상태.
+               ③ 빈 상태는 값 줄 대신 '아직 재 보지 않았어요' + [매트 깔아 보기] — v0.4 매트 띠(S6-12)를 흡수했다 -->
+          <section class="recap" aria-labelledby="recap-title">
+            <!-- v0.7 F3-2(story S6-16): 칸의 숫자를 읽기 전에 기준. 화면에만(카드 PNG 아님), 빈 상태·기록 있음 모두 -->
+            <div class="recap-head">
+              <h3 id="recap-title" class="recap-h">오늘 확인한 것</h3>
+              <p class="recap-def">쿵 지수는 바닥이 받은 충격의 세기를 견주는 값(방 절반 높이 공 100)입니다. 실제 소음(dB)이 아니고, 200이 <span class="nowrap">두 배로</span> 시끄럽다는 뜻도 아닙니다.</p>
+            </div>
+            <!-- v0.8(story S6-17): 쿵 지수 견주기 — 세로 눈금, 위가 큰 값. 줄마다 막대 길이 = 값/200(같은 버튼으로 다시 낼 수 있는 실측값만).
+                 공 = 쿵 색 막대, 드르륵 = 빗금 막대 + 각주(따로 계산), 매트 = 속 빈 청록 막대. 내 기록은 같은 축 위의 바늘(엔진 --ruler-position) —
+                 바늘·막대는 aria-hidden, '내 최대 쿵 {값}'은 목록 뒤에서 한 번 읽는다(엔진이 0이면 hidden). 화면에만(카드 PNG 아님) -->
+            <figure class="ruler" aria-labelledby="ruler-title">
+              <figcaption id="ruler-title" class="ruler-h">쿵 지수 견주기</figcaption>
+              <div class="ruler-body">
+                <ol class="ruler-list">
+                  <li class="rl" style="--v: 200"><b class="rl-v">200</b><span class="rl-t">천장 가까이에서 떨어진 공</span><span class="rl-bar" aria-hidden="true"></span></li>
+                  <li class="rl is-scrape" style="--v: 140"><b class="rl-v">140</b><span class="rl-t">의자 끌기(드르륵)*</span><span class="rl-bar" aria-hidden="true"></span></li>
+                  <li class="rl is-mat" style="--v: 114"><b class="rl-v">114</b><span class="rl-t">매트 위 · 천장 가까이</span><span class="rl-bar" aria-hidden="true"></span></li>
+                  <li class="rl is-base" style="--v: 100"><b class="rl-v">100</b><span class="rl-t">방 절반 높이에서 떨어진 공 · 기준</span><span class="rl-bar" aria-hidden="true"></span></li>
+                  <li class="rl is-mat" style="--v: 56"><b class="rl-v">56</b><span class="rl-t">매트 위 · 방 절반 높이</span><span class="rl-bar" aria-hidden="true"></span></li>
+                  <li class="rl" style="--v: 43"><b class="rl-v">43</b><span class="rl-t">바닥 톡</span><span class="rl-bar" aria-hidden="true"></span></li>
+                </ol>
+                <p class="ruler-mine" data-ruler-mine hidden><span class="rm-needle" aria-hidden="true"></span><span class="rm-chip"><span data-ruler-mine-label>내 최대 쿵</span> <b data-ruler-mine-value></b></span></p>
+              </div>
+              <p class="ruler-note">* 드르륵은 의자가 움직인 거리와 힘으로 따로 계산합니다.</p>
+              <!-- v0.9 G5(story S6-17i·j): 쿵 지수 ↔ 실제 소리 다리 줄. 눈금 값과 잇지 않는다(막대·바늘·화살표 없음), dB(A)는 감소량으로만.
+                   화면에만(카드 PNG 아님). 출처 링크는 S7에 있어 여기는 글만(탭 정지 늘리지 않음) -->
+              <p class="ruler-bridge">쿵 지수는 dB로 바꿀 수 없습니다. 한국소비자원이 실제 소리로 재 보니, 어린이 매트가 가벼운 충격음은 약 16~17dB(A) 줄였지만, 1m 높이에서 떨어뜨린 고무공 소리는 1~2dB(A)만 줄였습니다. <span class="rb-src">출처: 한국소비자원, 층간소음 저감 어린이 매트 시험(2025.12.24)</span></p>
+            </figure>
+            <ol class="recap-list">
+              <li class="recap-cell" data-recap="kung" data-state="empty">
+                <span class="rc-fl" aria-hidden="true"><b>7F</b><svg viewBox="0 0 12 12" focusable="false"><path d="M1 3h10L6 10z"/></svg><b>6F</b></span>
+                <p class="rc-t">내 바닥은, 누군가의 천장</p>
+                <p class="rc-v" aria-hidden="true"><span class="rc-from" aria-hidden="true" data-recap-from>7층 바닥</span><svg class="rc-arrow" viewBox="0 0 20 10" aria-hidden="true" focusable="false"><path d="M1 5h17M13.5 1.5 18 5l-4.5 3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="rc-to" aria-hidden="true" data-recap-to>6층 천장</span></p>
+                <p class="sr" data-recap-sr>7층 바닥의 쿵은 6층 천장에 닿습니다.</p>
+              </li>
+              <!-- v0.7 F3-5(story S6-14b): ①의 반전 짝. 값은 S4 s4-chair 수신이 화면에서 실제로 났을 때만(arch). 아래 기본 글 = 없음(규칙만).
+                   층 칩은 ①(7F ▽ 6F)과 같은 문법으로 순서만 뒤집는다(6F ▽ 7F) — 뒤집힌 건물에서 소리는 여전히 아래로 온다 -->
+              <li class="recap-cell" data-recap="listen" data-state="empty">
+                <span class="rc-fl rc-fl-inv" aria-hidden="true"><b>6F</b><svg viewBox="0 0 12 12" focusable="false"><path d="M1 3h10L6 10z"/></svg><b>7F</b></span>
+                <p class="rc-t">그리고 나도, 누군가의 아래층</p>
+                <p class="rc-v" aria-hidden="true"><span class="rc-from" aria-hidden="true" data-recap-from>6층 바닥</span><svg class="rc-arrow" viewBox="0 0 20 10" aria-hidden="true" focusable="false"><path d="M1 5h17M13.5 1.5 18 5l-4.5 3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="rc-to" aria-hidden="true" data-recap-to>7층 천장</span></p>
+                <p class="sr" data-recap-sr>건물을 뒤집으면, 6층 바닥의 소리는 7층 천장에 닿습니다.</p>
+              </li>
+              <li class="recap-cell" data-recap="mat" data-state="empty">
+                <span class="rc-fl" aria-hidden="true"><b>7F</b><i class="rc-mat"></i></span>
+                <p class="rc-t">같은 높이, 매트 한 장</p>
+                <p class="rc-v" aria-hidden="true"><span class="rc-from" aria-hidden="true" data-recap-from>쿵</span><svg class="rc-arrow" viewBox="0 0 20 10" aria-hidden="true" focusable="false"><path d="M1 5h17M13.5 1.5 18 5l-4.5 3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="rc-to" aria-hidden="true" data-recap-to></span></p>
+                <!-- v1.0-K(story S6-14c): {r}은 엔진이 정수로만 채우고 '쿵 지수 '와 '% 감소'는 마크업 글. 값이 있을 때만 보인다(site.css) -->
+                <p class="rc-pct" aria-hidden="true">쿵 지수 <b data-recap-reduction></b>% 감소</p>
+                <p class="rc-todo"><a class="btn btn-ghost btn-sm" href="#s5" data-action="cushion-revisit">매트 깔아 보기 <svg viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M6 10.5V2M2.5 5.5 6 2l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a></p>
+                <p class="sr" data-recap-sr>아직 매트로 재 보지 않았어요.</p>
+              </li>
+            </ol>
+          </section>
+          <!-- v0.5 E3 S6-15(story v5): 입장별 한 가지. 두 칸이 같은 무게(위층도 아래층도 '나'). 페이지가 보여 준 것과 확인된 사실만 — 보복·법률 조언 없음 -->
+          <section class="next" aria-labelledby="next-title">
+            <h3 id="next-title" class="next-h">할 수 있는 한 가지</h3>
+            <div class="next-cells">
+              <!-- v0.7 F3-6(story S6-15c~g): 문장 아래 닫힌 details 하나씩(JS 0, 키보드·낭독 기본). 상품·가격·두께·측정기 대여·법 압박 없음 -->
+              <div class="next-cell"><p class="nk">위층이라면</p><p>쿵이 나는 자리에 매트 한 장부터.</p>
+                <details class="how">
+                  <summary>매트 깔 자리</summary>
+                  <div class="how-body">
+                    <p>쿵이 자주 나는 자리부터 깔아요. 자주 걷는 자리, 의자 아래, 물건을 자주 내려두는 자리.</p>
+                    <p>매트는 의자 끄는 소리 같은 가벼운 충격엔 효과가 크고, 높은 데서 떨어지는 큰 충격엔 효과가 적어요. 그런 쿵은 높은 데서 떨어뜨리지 않는 것부터.</p>
+                    <p>깔고 나서 아래층에 한 번 물어 보세요. ‘저희 집 소리가 들리면 알려 주세요.’</p>
+                  </div>
+                </details>
+              </div>
+              <div class="next-cell"><p class="nk">아래층이라면</p><p>층간소음 이웃사이센터 전화 상담부터 <span class="nowrap">· <a class="tel" href="tel:16612642">1661-2642</a></span></p>
+                <details class="how">
+                  <summary>쪽지 한 장, 그다음 도움</summary>
+                  <div class="how-body">
+                    <blockquote class="slip"><p>안녕하세요, 아래층에 사는 이웃입니다. 밤 10시가 넘으면 거실 쪽에서 쿵 소리가 자주 들려요. 일부러 그러신 게 아니라는 것, 압니다. 그 시간엔 조금만 신경 써 주실 수 있을까요? 저희 집 소리도 들리면 알려 주세요.</p></blockquote>
+                    <p>그래도 어려우면 이렇게 도움을 받아요.</p>
+                    <ol class="how-steps">
+                      <li>관리사무소의 중재를 받아요(있다면 층간소음관리위원회).</li>
+                      <li>층간소음 이웃사이센터 전화 상담 1661-2642, 필요하면 방문 상담.</li>
+                    </ol>
+                    <p class="how-src">관리사무소가 있으면, 방문 상담은 관리사무소 중재 다음입니다. <cite>— 층간소음 이웃사이센터 자주하는 질문</cite></p>
+                  </div>
+                </details>
+              </div>
+            </div>
+          </section>
+          <!-- v0.2 #8 · v0.2.2 #5④: 절정을 건너뛰고 도착했을 때만 엔진이 hidden을 푼다(HOOKS.md 3.7).
+               v0.5: 화면 아래에 떠 있던 띠가 아래 E2 안내판·E1 안내를 덮었다 → 자리를 둘로 나눈다(site.css).
+               넓은 화면: 오른쪽 단의 카드 높이 안 남는 칸(band, 1fr 행) — 칸이 이미 있어 나타나도 아무것도 밀리지 않는다.
+               한 단(휴대폰·태블릿 세로): DOM 순서대로 E3 다음·투표 앞 — S6에 바로 도착해도 E2·E3가 밀리지 않는다(contest v0.5 M1).
+               돌아가기 행동 셋(E1 [집으로] > 이 띠 > E2 ③)은 E1만 주 버튼 모양이다 -->
+          <p class="missed" data-flip-missed hidden>
+            <span>건물을 아직 뒤집어 보지 않았어요</span>
+            <a class="btn btn-ghost btn-sm" href="#s4" data-action="flip-revisit">중력 뒤집기 보기 <svg viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M6 10.5V2M2.5 5.5 6 2l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+          </p>
+          <!-- v0.7 F3-8(story S6-06·07·07b, contest 1): 투표는 보조 버튼 모양(44px 이상, 채운 버튼 아님 — 주 행동은 하나) + 의심에 답하는 한 줄.
+               외부 링크는 이것 하나 — 맨 끝 행동 줄(S7-09)은 id로 여기에 온다. 주소는 출품 뒤 조율이 우리 상세 주소로 바꾼다 -->
+          <div class="vote">
+            <p>이 페이지는 Parallax 해커톤 ‘랜딩톤’ 출품작입니다. 만져 보고 마음에 들었다면, △ 한 번 눌러 주세요.</p>
+            <a class="btn btn-ghost vote-btn" id="vote-link" href="https://hackathon.parallax.kr/" target="_blank" rel="noopener" aria-label="갤러리에서 투표하기 (외부 사이트, 새 탭)"><span>갤러리에서 △ 투표하기</span><svg viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M3.5 8.5 9 3M4.5 3H9v4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+            <p class="vote-note">로그인한 누구나 작품마다 한 표씩 줄 수 있어요.</p>
+          </div>
+        </div>
+        <!-- v0.5: v0.4 매트 띠(S6-12 [data-mat-missed])는 E2 ③칸으로 옮겼다(story v5 — 같은 화면에 같은 행동 입구 둘을 두지 않는다).
+             엔진의 showMatInvite는 대상이 없으면 아무것도 하지 않는다(hooks.js matInvite null) — arch가 호출을 정리한다 -->
+      </div>
+    </section>
+
+    <!-- S7 · 바닥글 -->
+    <section class="scene scene-foot" id="s7" data-scene="s7" aria-labelledby="s7-title">
+      <footer class="foot" id="credits">
+        <h2 id="s7-title">알아 두면 좋은 것</h2>
+        <ul class="facts">
+          <li>우리나라 가구의 절반 이상(54.5%)이 아파트에 삽니다. <cite>— 국가데이터처, 2025년 인구주택총조사(2025.11.1 기준)</cite></li>
+          <li>2020년부터 해마다 3만 건이 넘는 층간소음 상담이 접수됐습니다. 2025년에는 3만 2,662건. <cite>— 한국환경공단 층간소음 이웃사이센터 통계자료</cite></li>
+          <!-- v0.7 F3-4(story S7-02c): 한국소비자원 원문 수치만(제품명·가격·순위 없음). 법령 기준(아래)과 한 문장으로 잇지 않는다 -->
+          <li>한국소비자원이 어린이 매트 8종(두께 4cm)을 시험해 보니, 가벼운 충격음은 약 16~17dB(A) 줄었고, 고무공을 0.4m 높이에서 떨어뜨린 무거운 충격음은 4~5dB(A), 1m에서는 1~2dB(A) 줄었습니다. <cite>— 한국소비자원, 층간소음 저감 어린이 매트 시험(2025.12.24)</cite></li>
+        </ul>
+        <p class="block">쿵 지수: 이 페이지의 물리엔진이 계산한 충격의 세기(상대값). 실제 소음(dB)이 아닙니다.</p>
+        <p class="block">법령이 정한 층간소음 기준: 뛰거나 걷는 소리(직접충격 소음)는 1분 등가소음도 낮(06~22시) 39dB(A) · 밤(22~06시) 34dB(A). 2023년에 4dB씩 강화됐습니다. 기준은 이 아래로 지키도록 노력하자는 약속입니다.
+          <small>2005년 6월 30일 이전에 사업승인을 받은 공동주택은 2dB(A)을 더해 적용합니다. — 공동주택 층간소음의 범위와 기준에 관한 규칙 별표(2023.1.2 개정)</small></p>
+        <div class="help">
+          <p>도움이 필요할 때 — 한국환경공단 층간소음 이웃사이센터 전화 1661-2642 (평일 9~18시, 점심 12~13시 제외) · <a href="https://floor.noiseinfo.or.kr/" target="_blank" rel="noopener">floor.noiseinfo.or.kr</a></p>
+          <p>전화상담에서 시작해, 필요하면 방문상담과 소음측정을 신청할 수 있어요.</p>
+          <p>이 페이지는 해커톤 출품작이며 한국환경공단과 관련이 없습니다.</p>
+        </div>
+        <h3>크레딧</h3>
+        <dl>
+          <dt>물리엔진·장면 엔진</dt><dd>직접 제작(외부 라이브러리 없음)</dd>
+          <dt>소리</dt><dd>Web Audio로 직접 합성</dd>
+          <dt>글꼴</dt><dd>Hahmlet — SIL Open Font License 1.1</dd>
+          <dt>그림</dt><dd>단면도 선화를 코드로 직접 그림</dd>
+          <!-- 조율 확인: 만든 사람 [사용자 이름] (FINAL-STORY S7-05) -->
+          <dt>AI 도구</dt><dd>Claude·Codex 에이전트와 함께 설계·제작했고, 사람이 검수했습니다.</dd>
+        </dl>
+        <!-- v0.6 F2(R11 14 · contest R3 4): [물리엔진 보기]는 크레딧 '물리엔진·장면 엔진' 바로 아래에서 확인한다. arch가 이 자리([data-engine-credit])에 버튼·캔버스를 붙인다 -->
+        <div class="engine-slot" data-engine-credit></div>
+        <h3 id="sources">출처</h3>
+        <ul class="src">
+          <li><a href="https://mods.go.kr/board.es?mid=a10301020200&amp;bid=203&amp;act=view&amp;list_no=446219" target="_blank" rel="noopener">국가데이터처, 2025년 인구주택총조사 결과(등록센서스 방식)</a></li>
+          <li><a href="https://floor.noiseinfo.or.kr/floornoise/home/statistics/all.do" target="_blank" rel="noopener">한국환경공단 층간소음 이웃사이센터 통계자료</a></li>
+          <li><a href="https://floor.noiseinfo.or.kr/floornoise/home/guide/intro.do" target="_blank" rel="noopener">층간소음 이웃사이센터 업무 소개</a></li>
+          <li><a href="https://www.law.go.kr/LSW/lsInfoP.do?lsId=012079" target="_blank" rel="noopener">공동주택 층간소음의 범위와 기준에 관한 규칙</a></li>
+          <li><a href="https://www.law.go.kr/LSW/lsRvsRsnListP.do?lsId=012079&amp;chrClsCd=010202&amp;lsRvsGubun=all" target="_blank" rel="noopener">같은 규칙 제정·개정이유</a></li>
+          <!-- v0.7 F3-4·6(story S7-06+): 매트 수치·중재 순서의 근거 -->
+          <li><a href="https://www.consumer.go.kr/user/ftc/consumer/cnsmrBBS/79/selectInfoRptDetail.do?infoId=A1081254&amp;cntntsId=00000566" target="_blank" rel="noopener">한국소비자원, 층간소음 저감 어린이 매트 시험 결과(2025.12.24)</a></li>
+          <li><a href="https://floor.noiseinfo.or.kr/floornoise/home/notice/faq.do" target="_blank" rel="noopener">층간소음 이웃사이센터 자주하는 질문</a></li>
+        </ul>
+        <p class="block">움직임이 불편하면 오른쪽 위 일시정지 버튼을 누르세요.</p>
+        <details>
+          <summary>글꼴 라이선스</summary>
+          <p>Hahmlet은 SIL Open Font License 1.1로 배포됩니다. 이 페이지는 쓰는 글자만 남긴 서브셋을 함께 제공합니다. 전문은 fonts/OFL.txt에 있습니다.</p>
+        </details>
+      </footer>
+      <!-- v0.6 F2 G1(S7-08, global R7·story): 페이지 맨 끝 한 문장. H1을 뒤집은 문장(쉼표 자리 같음). [물리엔진 보기]보다 늘 뒤(바닥글 밖).
+           통계 문장과 한 덩어리로 보이지 않게 바닥글과 떼고, 위에 슬래브 단면 한 줄 = 건물 맨 아래층의 바닥(site.css). 낭독 영역 아님 -->
+      <p class="coda">누군가의 바닥은, 내 천장입니다.</p>
+      <!-- v0.7 F3-9(story S7-09·10, contest 5): 맨 끝 = 맺음 문장 + 행동 한 줄(글 링크 셋, 채운 버튼 없음) + 상태 한 줄(검증된 값만).
+           △ 투표하기는 S6 앵커(#vote-link)로 가는 페이지 안 링크(외부 링크는 S6 하나). 카드 저장은 S6와 같은 data-action(숨김도 같다).
+           처음부터 다시는 기록을 지운다(arch). 상태 줄 숫자는 빌드가 주석 슬롯을 채운다(arch) -->
+      <div class="coda-end">
+        <p class="coda-acts">
+          <a href="#vote-link"><span><span aria-hidden="true">△</span> 투표하기</span><svg viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M6 10.5V2M2.5 5.5 6 2l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+          <button type="button" class="link-btn" data-action="save" hidden>카드 저장</button>
+          <a href="#s0" data-action="restart">처음부터 다시<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M6 10.5V2M2.5 5.5 6 2l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        </p>
+        <p class="coda-status"><span class="nowrap">물리엔진 1/120초 고정 스텝</span> · <span class="nowrap">외부 라이브러리 0</span> · <span class="nowrap">JS <span data-build-js-kb><!-- build:js-bytes --></span>KB</span> · <span class="nowrap">출처 <span data-build-source-count><!-- build:source-count --></span>개</span></p>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

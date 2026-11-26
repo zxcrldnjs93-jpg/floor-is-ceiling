@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>2D 물리 강체 300개 데모</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; color: #18232b; background: #fafaf9; font: 1rem/1.55 system-ui, sans-serif; }
+  main { max-width: 68rem; margin: auto; padding: clamp(.75rem, 4vw, 2rem); }
+  h1 { line-height: 1.15; }
+  canvas { width: 100%; height: clamp(24rem, 68svh, 46rem); display: block; background: #e8edf0; border: 1px solid #687783; touch-action: none; }
+  button { min-height: 2.75rem; padding: .35rem .75rem; color: inherit; background: white; border: 1px solid #485867; border-radius: .35rem; font: inherit; cursor: pointer; }
+  button:focus-visible { outline: 3px solid #075d90; outline-offset: 3px; }
+  .controls { margin: .75rem 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>2D 물리 강체 300개</h1>
+  <p id="detail">원, 상자, 삼각형이 같은 공간에서 충돌합니다. 화면의 물체를 끌거나 아래 버튼으로 흩트릴 수 있습니다.</p>
+  <div class="controls" id="controls" hidden>
+    <button type="button" id="scatter">물체 흩트리기</button>
+    <button type="button" id="reset">초기 배치</button>
+  </div>
+  <canvas id="scene" width="300" height="380" role="img" aria-label="원, 상자, 삼각형 강체 300개" aria-describedby="detail">
+    원, 상자, 삼각형 강체 300개의 충돌 데모
+  </canvas>
+  <noscript><p>스크립트를 켜면 강체 시뮬레이션을 볼 수 있습니다.</p></noscript>
+</main>
+<script type="module">
+  import { World, contain, dragPointer, fixedLoop } from './engine.js';
+
+  const canvas = document.querySelector('#scene');
+  const detail = document.querySelector('#detail');
+  const instructions = detail.textContent;
+  const context = canvas.getContext('2d');
+  const world = new World({gy:780,cell:30,iterations:10});
+  const count = 300;
+  const inks = ['#116477','#825423','#534681'];
+  const bodies = [];
+  let disconnectDrag;
+  let reduced = false;
+
+  function reset() {
+    for (const body of bodies) world.remove(body);
+    bodies.length = 0;
+    const width = canvas.clientWidth, height = canvas.clientHeight;
+    const columns = Math.min(25,Math.max(12,Math.floor(width/28)));
+    const rows = Math.ceil(count/columns);
+    const size = Math.min(19,0.72*Math.min(width/columns,height/(rows+4)));
+    for (let i = 0; i < count; i++) {
+      const shape = [
+        {radius:size/2},
+        {width:size,height:size*0.8},
+        {vertices:[{x:0,y:-size/2},{x:size/2,y:size/2},{x:-size/2,y:size/2}]}
+      ][i%3];
+      bodies.push(world.add({
+        ...shape,x:width*(i%columns+0.5)/columns,y:height*(Math.floor(i/columns)+1)/(rows+4),
+        angle:(i%9-4)*0.13,vx:(i%7-3)*7,spin:(i%5-2)*0.7,restitution:0.22
+      }));
+    }
+    render(1);
+  }
+
+  function render(alpha) {
+    context.clearRect(0,0,canvas.clientWidth,canvas.clientHeight);
+    for (const [i,body] of bodies.entries()) {
+      const pose = body.pose(alpha), {radius,points} = body.shape;
+      context.save();
+      context.translate(pose.x,pose.y);
+      context.rotate(pose.angle);
+      context.fillStyle = inks[i%inks.length];
+      context.beginPath();
+      if (radius) context.arc(0,0,radius,0,2*Math.PI);
+      else {
+        context.moveTo(points[0].x,points[0].y);
+        for (const point of points.slice(1)) context.lineTo(point.x,point.y);
+        context.closePath();
+      }
+      context.fill();
+      context.restore();
+    }
+  }
+
+  contain(world,canvas,(width,height) => {
+    const scale = Math.min(devicePixelRatio,2);
+    canvas.width = Math.round(width*scale);
+    canvas.height = Math.round(height*scale);
+    context.setTransform(canvas.width/width,0,0,canvas.height/height,0,0);
+    if (reduced) reset();
+    else render(1);
+  });
+  reset();
+  document.querySelector('#reset').addEventListener('click',reset);
+  document.querySelector('#scatter').addEventListener('click',() => {
+    for (const [i,body] of bodies.entries()) world.kick(body,(i%11-5)*16,-170-i%13*16,(i%7-3)*2);
+  });
+  fixedLoop(world,canvas,render,{onReduced(value) {
+    reduced = value;
+    document.querySelector('#controls').hidden = reduced;
+    detail.textContent = reduced ? '움직임 줄이기 설정에 따라 강체 300개의 초기 배치를 표시합니다.' : instructions;
+    if (reduced) {
+      disconnectDrag?.();
+      disconnectDrag = undefined;
+      reset();
+    } else {
+      disconnectDrag = dragPointer(world,canvas);
+    }
+  }});
+</script>
+</body>
+</html>

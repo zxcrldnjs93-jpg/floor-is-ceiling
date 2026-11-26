@@ -1,0 +1,196 @@
+{
+  "cases": [
+    {
+      "name": "320 터치 · 첫 안내와 바닥 톡 43 · 기준 매트 56 · 내 쿵 표시",
+      "viewport": {
+        "width": 320,
+        "height": 568,
+        "mobile": true
+      },
+      "cues": [
+        {"at": 0, "expect": {"state": "v08-intro-ready", "wait": 4}},
+        {"at": 0, "expect": {"state": "v08-hud", "wait": 4, "scene": "s0", "stable": 3}},
+        {"at": 0.2, "click": ["#s0 button[data-action=\"tap\"]"]},
+        {"at": 0.2, "expect": {"state": "v08-record", "wait": 4, "kind": "thump", "value": 43}},
+        {"at": 0.2, "expect": {"state": "v08-intro-scale", "wait": 4, "stable": 3}},
+        {"at": 0.2, "snapshot": "320-intro-scale"},
+        {"at": 1.5, "scroll": {"scene": "s5", "progress": 0.15, "seconds": 0}},
+        {"at": 1.5, "expect": {"state": "v08-hud", "wait": 4, "scene": "s5", "stable": 3}},
+        {"at": 1.5, "expect": {"state": "v04-mat-ready", "wait": 4, "heightSource": "reference"}},
+        {"at": 1.5, "click": ["#s5 button[data-action=\"mat-before\"]"]},
+        {"at": 1.5, "expect": {"state": "v04-mat-bare", "wait": 5, "beforeValue": 100}},
+        {"at": 1.5, "click": ["#s5 button[data-action=\"mat-lay\"]"]},
+        {"at": 1.5, "expect": {"state": "v04-mat-laid", "wait": 4}},
+        {"at": 1.5, "click": ["#s5 button[data-action=\"mat-after\"]"]},
+        {"at": 1.5, "expect": {"state": "v04-mat-compared", "wait": 5}},
+        {"at": 1.5, "scroll": {"scene": "s6", "progress": 0, "seconds": 0}},
+        {"at": 1.5, "expect": {"state": "v08-hud", "wait": 4, "scene": "s6", "stable": 3}},
+        {"at": 1.5, "expect": {"state": "v07-mat-percent-ready", "wait": 4, "before": 100, "after": 56}},
+        {"at": 1.5, "scroll": {"scene": "s6", "progress": 0, "seconds": 0}},
+        {"at": 1.5, "expect": {"state": "v08-hud", "wait": 4, "scene": "s6", "stable": 3}},
+        {"at": 1.5, "reveal": "#s6 .ruler-h"},
+        {"at": 1.5, "expect": {"state": "v08-ruler", "wait": 5, "stable": 3}},
+        {"at": 1.5, "expect": {"state": "v08-marker", "wait": 4, "kind": "thump", "stable": 3}},
+        {"at": 1.5, "snapshot": "320-ruler-tap"}
+      ]
+    },
+    {
+      "name": "390 줄이기 · 기준 공 100 · S0~S6 HUD 층과 관점 · 반전과 복귀",
+      "viewport": {
+        "width": 390,
+        "height": 844,
+        "mobile": true,
+        "reducedMotion": true
+      },
+      "cues": [
+        {"at": 0, "expect": {"state": "v08-intro-ready", "wait": 4}},
+        {"at": 0, "expect": {"state": "v08-hud", "wait": 4, "scene": "s0", "stable": 3}},
+        {"at": 0.2, "click": ["#s0 button[data-action=\"drop\"]"]},
+        {"at": 0.2, "expect": {"state": "v08-record", "wait": 4, "kind": "thump", "value": 100}},
+        {"at": 0.2, "expect": {"state": "v08-intro-scale", "wait": 4, "stable": 3}},
+        {"at": 1.6, "scroll": {"scene": "s1", "progress": 0.25, "seconds": 0}},
+        {"at": 1.6, "expect": {"state": "v08-hud", "wait": 4, "scene": "s1", "stable": 3}},
+        {"at": 1.6, "scroll": {"scene": "s2", "progress": 0.32, "seconds": 0}},
+        {"at": 1.6, "expect": {"state": "v08-hud", "wait": 4, "scene": "s2", "stable": 3}},
+        {"at": 1.6, "scroll": {"scene": "s3", "progress": 0.52, "seconds": 0, "sceneProgress": true}},
+        {"at": 1.6, "expect": {"state": "v08-hud", "wait": 4, "scene": "s3", "stable": 3}},
+        {"at": 1.6, "scroll": {"scene": "s4", "progress": 0.2, "seconds": 0, "climaxProgress": true}},
+        {"at": 1.6, "expect": {"state": "v08-hud", "wait": 4, "scene": "s4", "stable": 3, "view": "all"}},
+        {"at": 1.6, "click": ["#s4 button[data-action=\"flip\"]"]},
+        {"at": 1.6, "expect": {"state": "v08-hud", "wait": 4, "scene": "s4", "stable": 3, "view": "listening"}},
+        {"at": 1.6, "snapshot": "390-reduced-hud-listening"},
+        {"at": 1.6, "expect": {"state": "v06b-s4-reset-ready", "wait": 4}},
+        {"at": 1.6, "click": ["#s4 button[data-action=\"reset-flip\"]"]},
+        {"at": 1.6, "expect": {"state": "v08-hud", "wait": 4, "scene": "s4", "stable": 3, "view": "all"}},
+        {"at": 1.6, "scroll": {"scene": "s5", "progress": 0.15, "seconds": 0}},
+        {"at": 1.6, "expect": {"state": "v08-hud", "wait": 4, "scene": "s5", "stable": 3}},
+        {"at": 1.6, "scroll": {"scene": "s6", "progress": 0, "seconds": 0}},
+        {"at": 1.6, "expect": {"state": "v08-hud", "wait": 4, "scene": "s6", "stable": 3}},
+        {"at": 1.6, "reveal": "#s6 .ruler-h"},
+        {"at": 1.6, "expect": {"state": "v08-ruler", "wait": 5, "stable": 3}},
+        {"at": 1.6, "expect": {"state": "v08-marker", "wait": 4, "kind": "thump", "stable": 3}},
+        {"at": 1.6, "snapshot": "390-ruler-standard"}
+      ]
+    },
+    {
+      "name": "844×390 가로모드 · 높은 낙하 200 · 최고 높이 매트 114 · 눈금 겹침",
+      "viewport": {
+        "width": 844,
+        "height": 390,
+        "mobile": true
+      },
+      "cues": [
+        {"at": 0, "expect": {"state": "v08-hud", "wait": 4, "scene": "s0", "stable": 3}},
+        {"at": 0.2, "click": ["#s0 button[data-action=\"drop-high\"]"]},
+        {"at": 0.2, "expect": {"state": "v08-record", "wait": 4, "kind": "thump", "value": 200}},
+        {"at": 0.2, "expect": {"state": "v08-intro-scale", "wait": 4, "stable": 3}},
+        {"at": 1.6, "scroll": {"scene": "s5", "progress": 0.15, "seconds": 0}},
+        {"at": 1.6, "expect": {"state": "v08-hud", "wait": 4, "scene": "s5", "stable": 3}},
+        {"at": 1.6, "expect": {"state": "v04-mat-ready", "wait": 4, "heightSource": "peak"}},
+        {"at": 1.6, "click": ["#s5 button[data-action=\"mat-before\"]"]},
+        {"at": 1.6, "expect": {"state": "v04-mat-bare", "wait": 5, "beforeValue": 200}},
+        {"at": 1.6, "click": ["#s5 button[data-action=\"mat-lay\"]"]},
+        {"at": 1.6, "expect": {"state": "v04-mat-laid", "wait": 4}},
+        {"at": 1.6, "click": ["#s5 button[data-action=\"mat-after\"]"]},
+        {"at": 1.6, "expect": {"state": "v04-mat-compared", "wait": 5}},
+        {"at": 1.6, "scroll": {"scene": "s6", "progress": 0, "seconds": 0}},
+        {"at": 1.6, "expect": {"state": "v08-hud", "wait": 4, "scene": "s6", "stable": 3}},
+        {"at": 1.6, "expect": {"state": "v07-mat-percent-ready", "wait": 4, "before": 200, "after": 114}},
+        {"at": 1.6, "scroll": {"scene": "s6", "progress": 0, "seconds": 0}},
+        {"at": 1.6, "expect": {"state": "v08-hud", "wait": 4, "scene": "s6", "stable": 3}},
+        {"at": 1.6, "reveal": "#s6 .ruler-h"},
+        {"at": 1.6, "expect": {"state": "v08-ruler", "wait": 5, "stable": 3}},
+        {"at": 1.6, "expect": {"state": "v08-marker", "wait": 4, "kind": "thump", "stable": 3}},
+        {"at": 1.6, "snapshot": "844-ruler-high"}
+      ]
+    },
+    {
+      "name": "1280 키보드 · 의자 끌기 값과 드르륵 표시",
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "cues": [
+        {"at": 0.2, "scroll": {"scene": "s1", "progress": 0.3, "seconds": 0}},
+        {"at": 0.2, "expect": {"state": "v08-hud", "wait": 4, "scene": "s1", "stable": 3}},
+        {"at": 0.2, "tabTo": "#s1 button[data-action=\"drag-chair\"]"},
+        {"at": 0.2, "enter": "#s1 button[data-action=\"drag-chair\"]"},
+        {"at": 0.2, "expect": {"state": "v08-record", "wait": 4, "kind": "scrape", "value": 140}},
+        {"at": 0.2, "scroll": {"scene": "s6", "progress": 0, "seconds": 0}},
+        {"at": 0.2, "expect": {"state": "v08-hud", "wait": 4, "scene": "s6", "stable": 3}},
+        {"at": 0.2, "reveal": "#s6 .ruler-h"},
+        {"at": 0.2, "expect": {"state": "v08-ruler", "wait": 5, "stable": 3}},
+        {"at": 0.2, "expect": {"state": "v08-marker", "wait": 4, "kind": "scrape", "stable": 3}},
+        {"at": 0.2, "snapshot": "1280-ruler-chair"}
+      ]
+    },
+    {
+      "name": "1440 일반 스크롤 · 첫 눈금보다 낮은 내 기록 · S4 회전 중 세 층과 듣기 상태",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cues": [
+        {"at": 0, "expect": {"state": "v08-hud", "wait": 4, "scene": "s0", "stable": 3}},
+        {"at": 0.2, "click": ["#s0 [data-physics-body='7:ball']"]},
+        {"at": 0.2, "expect": {"state": "v08-record", "wait": 4, "kind": "thump", "value": 30}},
+        {"at": 0.2, "expect": {"state": "v08-intro-scale", "wait": 4, "stable": 3}},
+        {"at": 1.6, "scroll": {"scene": "s2", "progress": 0.35, "seconds": 0.5}},
+        {"at": 1.6, "expect": {"state": "v08-hud", "wait": 4, "scene": "s2", "stable": 3}},
+        {"at": 1.6, "scroll": {"scene": "s3", "progress": 0.6, "seconds": 0.4, "sceneProgress": true}},
+        {"at": 1.6, "expect": {"state": "v08-hud", "wait": 4, "scene": "s3", "stable": 3}},
+        {"at": 1.6, "scroll": {"scene": "s4", "progress": 0.2, "seconds": 0, "climaxProgress": true}},
+        {"at": 1.6, "expect": {"state": "v08-hud", "wait": 4, "scene": "s4", "stable": 3, "view": "all"}},
+        {"at": 1.6, "scroll": {"scene": "s4", "progress": 0.525, "seconds": 0.45, "climaxProgress": true}},
+        {"at": 1.6, "expect": {"state": "v06b-s4-before-listen", "wait": 4, "stable": 3}},
+        {"at": 1.6, "expect": {"state": "v08-hud", "wait": 4, "scene": "s4", "stable": 3, "view": "all"}},
+        {"at": 1.6, "scroll": {"scene": "s4", "progress": 0.63, "seconds": 0.6, "climaxProgress": true}},
+        {"at": 1.6, "expect": {"state": "v08-hud", "wait": 4, "scene": "s4", "stable": 3, "view": "listening"}},
+        {"at": 1.6, "snapshot": "1440-hud-listening"},
+        {"at": 1.6, "scroll": {"scene": "s4", "progress": 0.97, "seconds": 0.65, "climaxProgress": true}},
+        {"at": 1.6, "expect": {"state": "v06-s4-line-return", "wait": 5, "stable": 3}},
+        {"at": 1.6, "expect": {"state": "v08-hud", "wait": 4, "scene": "s4", "stable": 3, "view": "all"}},
+        {"at": 1.6, "scroll": {"scene": "s6", "progress": 0, "seconds": 0}},
+        {"at": 1.6, "expect": {"state": "v08-hud", "wait": 4, "scene": "s6", "stable": 3}},
+        {"at": 1.6, "reveal": "#s6 .ruler-h"},
+        {"at": 1.6, "expect": {"state": "v08-ruler", "wait": 5, "stable": 3}},
+        {"at": 1.6, "expect": {"state": "v08-marker", "wait": 4, "kind": "thump", "stable": 3}},
+        {"at": 1.6, "snapshot": "1440-ruler-below-first-tick"}
+      ]
+    },
+    {
+      "name": "390 처음엔 기록 없음 · 매트만 한 뒤에도 카드와 같은 위치",
+      "viewport": {
+        "width": 390,
+        "height": 844,
+        "mobile": true
+      },
+      "cues": [
+        {"at": 0.2, "scroll": {"scene": "s6", "progress": 0, "seconds": 0}},
+        {"at": 0.2, "expect": {"state": "v08-hud", "wait": 4, "scene": "s6", "stable": 3}},
+        {"at": 0.2, "reveal": "#s6 .ruler-h"},
+        {"at": 0.2, "expect": {"state": "v08-ruler", "wait": 5, "stable": 3}},
+        {"at": 0.2, "expect": {"state": "v08-marker", "wait": 4, "kind": "empty", "stable": 3}},
+        {"at": 0.2, "snapshot": "390-ruler-no-record"},
+        {"at": 0.2, "scroll": {"scene": "s5", "progress": 0.15, "seconds": 0}},
+        {"at": 0.2, "expect": {"state": "v08-hud", "wait": 4, "scene": "s5", "stable": 3}},
+        {"at": 0.2, "expect": {"state": "v04-mat-ready", "wait": 4, "heightSource": "reference"}},
+        {"at": 0.2, "click": ["#s5 button[data-action=\"mat-before\"]"]},
+        {"at": 0.2, "expect": {"state": "v04-mat-bare", "wait": 5, "beforeValue": 100}},
+        {"at": 0.2, "click": ["#s5 button[data-action=\"mat-lay\"]"]},
+        {"at": 0.2, "expect": {"state": "v04-mat-laid", "wait": 4}},
+        {"at": 0.2, "click": ["#s5 button[data-action=\"mat-after\"]"]},
+        {"at": 0.2, "expect": {"state": "v04-mat-compared", "wait": 5}},
+        {"at": 0.2, "scroll": {"scene": "s6", "progress": 0, "seconds": 0}},
+        {"at": 0.2, "expect": {"state": "v08-hud", "wait": 4, "scene": "s6", "stable": 3}},
+        {"at": 0.2, "expect": {"state": "v07-mat-percent-ready", "wait": 4, "before": 100, "after": 56}},
+        {"at": 0.2, "scroll": {"scene": "s6", "progress": 0, "seconds": 0}},
+        {"at": 0.2, "expect": {"state": "v08-hud", "wait": 4, "scene": "s6", "stable": 3}},
+        {"at": 0.2, "reveal": "#s6 .ruler-h"},
+        {"at": 0.2, "expect": {"state": "v08-ruler", "wait": 5, "stable": 3}},
+        {"at": 0.2, "expect": {"state": "v08-marker", "wait": 4, "kind": "mat-only", "stable": 3}},
+        {"at": 0.2, "snapshot": "390-ruler-mat-only"}
+      ]
+    }
+  ]
+}

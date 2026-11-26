@@ -1,0 +1,1051 @@
+/* 「중력을 뒤집으면」 화면 스타일 — lt-opus-design. 토큰은 ../tokens.css(빌드 시 head에 인라인)
+   개발 미리보기(site/index.html을 바로 열 때)용으로 토큰을 불러온다. 빌드에서 이 파일을 인라인하면 이 줄은 무시된다(HOOKS.md 4절). */
+@import url("../tokens.css");
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--c-paper); color: var(--c-ink);
+  font-family: var(--font); font-weight: var(--w-body); font-size: var(--fs-body); line-height: var(--lh-body);
+  -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+}
+h1, h2, h3, p, ul, ol, dl, dd, figure { margin: 0; }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+a { color: inherit; text-underline-offset: 4px; text-decoration-thickness: 1px; }
+:focus-visible { outline: 2px solid var(--c-focus); outline-offset: 3px; border-radius: 3px; }
+[hidden] { display: none !important; }
+.sr { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.skip { position: fixed; left: 12px; top: 12px; z-index: 20; background: var(--c-ink); color: var(--c-paper); padding: 8px 12px; border-radius: 4px; transform: translateY(-200%); }
+.skip:focus { transform: none; }
+
+/* ── 머리띠: 왼쪽 작품명 / 오른쪽 엘리베이터 미니맵 + 움직임 일시정지 ── */
+.hud {
+  position: fixed; inset: 0 0 auto 0; z-index: var(--z-hud); height: var(--hud-h);
+  display: flex; justify-content: space-between; align-items: center; padding: 0 var(--margin);
+  background: color-mix(in srgb, var(--c-paper) 88%, transparent);
+  border-bottom: var(--lw-thin) solid var(--c-guide);
+}
+.hud .brand { font-weight: var(--w-ui); font-size: var(--fs-ui); letter-spacing: -0.01em; }
+.hud-right { display: flex; align-items: center; gap: var(--s-3); }
+.lift { display: inline-flex; align-items: center; gap: 2px; background: var(--c-led-panel); border-radius: 6px; padding: 5px 6px; box-shadow: inset 0 0 0 2px #2A3035; }
+.lift .cell { padding: 3px 5px; border-radius: 3px; }
+.lift .dots {
+  /* 꺼진 층: 켜진 층(--c-led, 빛 번짐·점등 칸 바탕)보다 확실히 어둡되 판 위 3:1 이상(v0.3.5 qa/CONTRAST.md, #8D6250 on #161A1E ≈ 3.33:1).
+     글자는 모든 화면에서 19px 이상 굵은 글(큰 글 기준 3:1). 미니맵 전체는 role="img"이고 칸은 aria-hidden — 읽는 이름은 "현재 N층"뿐이다 */
+  --p: 2.5px; display: block; font-weight: var(--w-led); font-size: 21px; line-height: 1; letter-spacing: .02em; color: #8D6250;
+  -webkit-mask-image: radial-gradient(circle, #000 0 calc(var(--p) * .38), transparent calc(var(--p) * .48));
+          mask-image: radial-gradient(circle, #000 0 calc(var(--p) * .38), transparent calc(var(--p) * .48));
+  -webkit-mask-size: var(--p) var(--p); mask-size: var(--p) var(--p);
+}
+.lift .cell.is-on { background: #24140F; filter: drop-shadow(0 0 4px rgba(255, 90, 44, .65)); }
+.lift .cell.is-on .dots { color: var(--c-led); }
+.lift[data-flipped] { flex-direction: row-reverse; }
+/* 화살표 자리는 늘 잡아 둔다(보일 때만 켬): 층이 바뀔 때 미니맵 폭이 변해 머리띠가 밀리던 것(레드팀 v0.2.2, 320 CLS) */
+.lift .lift-arrow { width: 11px; height: 11px; fill: var(--c-led); margin: 0 3px; display: block; visibility: hidden; }
+.lift[data-moving] .lift-arrow { visibility: visible; }
+.lift[data-moving="up"] .lift-arrow { transform: rotate(180deg); }
+/* v0.8 U-02b "지금 7층 · 위층": 엘리베이터 표시판 옆 종이 안내판(LED가 아니라 읽는 글). 층 숫자 굵게, 16px(휴대폰 15).
+   가장 긴 글 두 벌(.ln-ghost)을 같은 칸에 겹쳐 폭을 미리 잡는다 → 층이 바뀌어도 머리띠가 밀리지 않는다(CLS 0).
+   '아래층'이 되는 순간만 한 번 쿵 색으로 비쳤다 사라진다(ui/hud.js .is-flash — 줄이기·일시정지에서는 글만 바뀐다) */
+.lift-now {
+  display: inline-grid; align-items: center; min-height: 36px; padding: 0 11px; border: 1.5px solid var(--c-ink); border-radius: 6px;
+  background: var(--c-paper); color: var(--c-ink); font-size: 16px; font-weight: var(--w-ui); line-height: 1.15; white-space: nowrap;
+}
+.lift-now > * { grid-area: 1 / 1; }
+.lift-now .ln-ghost { visibility: hidden; }
+.lift-now b { font-weight: 800; }
+.lift-now[data-view="lower"] .ln-txt .ln-view { color: var(--c-kung-ink); }
+/* 바탕은 그대로(글 대비 유지 — 쿵 옅은 바탕 위 '아래층' 쿵 색 글은 4.1:1로 떨어졌다), 테두리 빛만 한 번 */
+@keyframes ln-flash { from { border-color: var(--c-kung); box-shadow: 0 0 0 4px var(--c-kung-tint); } }
+html:not([data-motion-paused]) .lift-now.is-flash { animation: ln-flash .9s var(--ease-kung) both; }
+.toggles { display: flex; align-items: center; gap: 8px; }
+.toggle {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 36px;
+  font-weight: var(--w-ui); font-size: var(--fs-small); line-height: 1;
+  padding: 8px 13px 8px 11px; border-radius: 999px; border: 1.5px solid var(--c-ink-3); color: var(--c-ink);
+  transition: background-color var(--dur-ui) var(--ease-ui);
+}
+.toggle[hidden] { display: inline-flex !important; visibility: hidden; }   /* 엔진이 켜기 전에도 자리를 잡는다 → 켜질 때 밀림 없음 */
+.toggle svg { width: 14px; height: 14px; flex: none; }
+.toggle-sound svg { width: 16px; }
+/* 상태는 data-pressed(v0.3.5: aria-pressed는 쓰지 않는다 — 보이는 라벨이 동작을 말한다) */
+.toggle .ic-on, .toggle[data-pressed="true"] .ic-off { display: none; }
+.toggle[data-pressed="true"] .ic-on { display: inline; }
+/* 라벨 두 가지(켜기/끄기)를 한 칸에 겹쳐 긴 쪽 폭으로 고정 → 눌러서 문구가 바뀌어도 폭이 그대로 */
+.tg-label { display: inline-grid; }
+.tg-label > * { grid-area: 1 / 1; }
+.tg-ghost { visibility: hidden; }
+.toggle.is-on, .toggle[data-pressed="true"] { background: var(--c-ink); color: var(--c-paper); border-color: var(--c-ink); }
+/* 머리띠 아래 작은 알림(소리 켜기 실패 · U-08 첫 진동 안내) */
+.hud-note {
+  position: absolute; right: var(--margin); top: calc(100% + 8px); max-width: min(360px, calc(100vw - 2 * var(--margin)));
+  padding: 8px 12px; background: var(--c-paper); border: 1.5px solid var(--c-ink); border-radius: 6px; box-shadow: 3px 3px 0 var(--c-guide);
+  font-size: var(--fs-small); line-height: 1.5;
+}
+.hud-note:empty { display: none; }
+/* v0.4(심사 I3): 휴대폰에서 U-08 진동 안내가 머리띠 바로 아래 기록 띠(S0에서 "이 줄이 바닥입니다"로 소개한 같은 사건의 연결 장치)를
+   첫 재생 3초 동안 덮었다 → 화면 아래에 띄운다(나타나도 아무것도 밀지 않는다) */
+@media (max-width: 720px) {
+  .hud-note[data-cue="u-08"] { position: fixed; top: auto; bottom: max(14px, env(safe-area-inset-bottom)); left: var(--margin); right: var(--margin); max-width: none; }
+}
+/* v0.5: 열린 장면을 벗어나면 화면에서만 걷는다(stage.js watchU08 — S3 첫 문장·버튼을 덮지 않게). 닫는 것은 엔진 */
+.hud-note[data-cue="u-08"].is-away { visibility: hidden; }
+
+/* 차례가 아니거나 막힌 조작(엔진이 aria-disabled="true"): 흐리게, 누를 수 없는 커서(레드팀 v0.2.2 5절 5번) */
+.btn[aria-disabled="true"], .btn-link[aria-disabled="true"] { opacity: .42; cursor: default; }
+.btn[aria-disabled="true"]:active { transform: none; }
+[data-action][aria-hidden="true"][aria-disabled="true"] { cursor: default; }
+.btn-link { padding: 10px 4px; min-height: 40px; font-weight: var(--w-ui); font-size: var(--fs-small); color: var(--c-ink); text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
+.d-only { display: inline; }
+@media (max-width: 720px) { .d-only { display: none; } }
+
+/* ── 장면 = 한 층. 패널은 100svh로 고정되고 섹션 길이가 스크롤 구간이 된다 ── */
+.scene { position: relative; }
+.scene[data-scene="s0"] { min-height: 100svh; }
+.scene[data-scene="s2"] { min-height: 140svh; }
+.scene[data-scene="s3"] { min-height: 100svh; }
+.scene[data-scene="s4"] { min-height: 350svh; }   /* v0.6 F2b(motion createClimaxScrollMap · contest R2-1): 접근 .88 · 듣기 1.22 · 복귀 .40 화면 */
+.panel { position: sticky; top: 0; height: 100svh; overflow: hidden; }
+.stage { position: absolute; inset: 0; }
+.room { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.copy { position: absolute; inset: 0; z-index: var(--z-copy); pointer-events: none; }
+/* 무대 위 글은 누름을 가로채지 않는다: 방을 누르면 그 높이에서 공이 떨어지므로(v0.2.2 #3, 320에서 안내 문단이 방 위쪽을 덮던 문제)
+   버튼·링크만 누름을 받는다 */
+.copy > *, .copy h1 > * { pointer-events: none; }
+.copy a, .copy button, .copy summary { pointer-events: auto; }
+[data-place] { position: absolute; }
+.copy h1 { position: static; font: inherit; }
+/* v0.4.1 CLS(배포 1440×900 0.144): 자리 글은 stage.js가 그림에 맞춰 놓기 전까지 숨긴다. 느린 망에서 스크립트가 늦게 오면
+   글이 무대 왼쪽 위(0,0)에 먼저 그려졌다가 제자리로 뛰던 한 번(큰 제목 두 줄·안내·'아래층으로')이 CLS의 거의 전부였다.
+   스크립트가 끝내 오지 않아도 글은 보여야 하므로 8초짜리 '숨김 유지' 애니메이션으로만 숨긴다(끝나면 저절로 보임).
+   줄이기 규칙(animation: none !important)보다 이 선택자가 구체적이라 줄이기에서도 같다 — 움직임이 아니라 보임 시점이다 */
+@keyframes lt-await-layout { from, to { visibility: hidden; } }
+.copy:not(.is-laid) [data-place] { animation: lt-await-layout 8s !important; }
+
+/* 훅 요소의 시각 규칙 */
+.pbody { position: absolute; left: 0; top: 0; z-index: var(--z-bodies); transform-origin: 0 0; }
+.pbody svg { display: block; overflow: visible; position: absolute; left: 50%; bottom: 0; translate: -50% 0; }
+.pbody[data-shape="circle"] svg { bottom: auto; top: 50%; translate: -50% -50%; }   /* 공은 상자 한가운데(구를 때 중심이 같다) */
+.pbody svg.is-mirror { transform: scaleX(-1); }
+.pbody[data-action] { cursor: pointer; touch-action: manipulation; }
+.phys-preview { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 40; pointer-events: none; overflow: visible; }
+.phys-outline { fill: none; stroke: #00a38e; stroke-width: 2; stroke-dasharray: 5 3; }
+.phys-outline.is-lamp { stroke: #8a5cf6; }
+.phys-label { font: 600 12px/1 ui-monospace, monospace; fill: #0d5f55; }   /* ?preview 점검 겹층. v0.7 F3-10: 화면 글 12px 미만 금지 */
+.plamp { position: absolute; z-index: 1; pointer-events: none; transform: rotate(var(--lamp-angle, 0rad)); }
+.plamp svg { display: block; overflow: visible; }
+.plamp.is-fallen .lamp-cone { display: none; }
+.hit { position: absolute; z-index: 1; cursor: pointer; touch-action: manipulation; }
+.strip { position: absolute; z-index: 1; pointer-events: none; }
+.strip svg { display: block; overflow: visible; }
+.strip [data-replay-cursor] { position: absolute; top: -8px; bottom: -8px; left: calc(var(--cursor, 0) * 100%); width: 0; border-left: 1.5px solid var(--c-ink); }
+.strip [data-replay-cursor]::before { content: ""; position: absolute; top: -6px; left: -6px; border: 5px solid transparent; border-top-color: var(--c-ink); }
+.marks { position: absolute; inset: 0; width: 100%; height: 100%; z-index: var(--z-marks); pointer-events: none; overflow: visible; }   /* 표지: 제목 글자 위, 물건 아래 */
+/* 아래층 반응 '…?'(v0.2 #3): 도면 위 말풍선 표지. 폭에 비례해 1440에서도 한눈에 보이고, 나타날 때 한 번 튄다 */
+.react {
+  position: absolute; z-index: 4; pointer-events: none;
+  font-weight: 800; font-size: clamp(26px, 2.6vw, 44px); line-height: 1; letter-spacing: .02em; color: var(--c-ink);
+  padding: .16em .42em .22em; border-radius: 999px; background: var(--c-paper); border: 2px solid var(--c-ink);
+  box-shadow: 3px 3px 0 var(--c-guide);
+  animation: react-pop .36s cubic-bezier(.2, 1.6, .4, 1) both;
+}
+[data-react="laptop"] { font-size: clamp(15px, 1.25vw, 21px); border-width: 1.5px; box-shadow: none; }
+/* transform 대신 scale·translate 속성: S4 [data-building-upright]의 역회전(transform)을 덮어쓰지 않는다 */
+@keyframes react-pop { from { scale: .4; translate: 0 8px; opacity: 0; } to { scale: 1; translate: 0 0; opacity: 1; } }
+@media (max-width: 720px) { .react { font-size: var(--fs-h3); } }
+
+/* 엔진 파동(proto/motion createSlabWave)을 단면도 언어로: 쿵 색, 아래로 퍼지는 반타원 */
+.lt-slab-wave-layer { position: absolute; z-index: 1; pointer-events: none; color: var(--c-kung); overflow: visible; }
+/* v0.2 #3: 호 크기·두께를 화면 폭에 비례(390 ≈ 156px·2.5px → 1440 ≈ 518px·3.7px). 지속시간·진폭은 엔진(createSlabWave) */
+.lt-slab-wave-arc {
+  border-width: clamp(2.5px, .26vw, 4px) !important;
+  inline-size: clamp(9.75rem, 36vw, 38rem) !important; block-size: clamp(4rem, 6vw, 7rem) !important;
+  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--c-kung) 40%, transparent));
+}
+
+/* ── 글 ── */
+.display { font-weight: var(--w-display); font-size: var(--fs-display); line-height: 1; letter-spacing: var(--track-display); white-space: nowrap; }
+.display.is-wrapped { white-space: normal; line-height: 1.04; width: 7em; }
+.h2 { font-weight: var(--w-h2); font-size: var(--fs-h2); line-height: 1.14; letter-spacing: -0.015em; text-wrap: balance; }
+.lead { font-size: var(--fs-lead); line-height: var(--lh-lead); color: var(--c-ink-2); }
+.annot { font-size: var(--fs-annot); font-weight: var(--w-annot); letter-spacing: var(--track-annot); color: var(--c-ink-2); }
+/* v0.7 F3-10(global R 1): 쿵 지수의 뜻은 숫자의 뜻 → 작은 글(14)·먹색. 주석(12, 회색)이던 것. 낮은 화면 13 */
+.u06 { font-size: var(--fs-small); line-height: 1.55; color: var(--c-ink); max-width: 36ch; }
+.cue { font-weight: var(--w-ui); font-size: var(--fs-ui); line-height: 1.5; color: var(--c-ink); }   /* v0.6 F2(R11 6): 큐 줄간격 1.5 하나(S2 1.75·S5 1.45이던 것) */
+.band-note { font-size: 13px; line-height: 1.5; color: var(--c-ink-2); width: 172px; }
+.band-note .note-leader { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+/* v0.8 S0-07 한 줄 눈금: 숫자의 뜻이라 14·먹(DESIGN 5.2), 세 값은 굵은 쿵 색 숫자(같은 폭 숫자). 폭은 stage.js(2행 제목 옆 빈 폭) */
+.band-ruler { font-size: var(--fs-small); line-height: 1.5; color: var(--c-ink); }
+.band-ruler .br-k { font-weight: 720; }
+/* v1.0 K1: 정의(바닥이 받은 충격의 세기)는 이름 '쿵 지수'에 붙는 풀이 — 같은 먹, 보통 굵기. 세로 미니 눈금은 이름 아래 한 줄(13) */
+.band-ruler .br-def { font-weight: 500; }
+.band-ruler.is-col .br-def { font-size: 13px; }
+.band-ruler.is-col .br-def::before { content: "\A"; white-space: pre; }
+/* 세로 눈금이 '아래층으로' 자리를 덮으면(1280: 띠가 정의 한 줄만큼 길어졌다) 띠가 그 자리를 대신한다 — 짧은 휴대폰과 같은 규칙 */
+[data-cue="s0-band"]:not([hidden]) ~ .scroll-hint[data-under-band] { display: none; }
+.band-ruler b { font-weight: 800; color: var(--c-kung-ink); font-variant-numeric: tabular-nums; }
+.band-ruler .br-i { white-space: nowrap; }
+/* 넓은 화면(stage.js .is-col): 6층 조명 오른쪽 좁은 칸의 세로 미니 눈금 — 위가 큰 값, 숫자 열이 오른쪽 정렬(S6 눈금과 같은 문법).
+   보이는 순서만 뒤집고 글 순서(DOM·낭독·문구 대조)는 '바닥 톡 43 · … · 천장 가까이 공 200' 그대로 */
+.band-ruler.is-col:not([hidden]) { display: grid; row-gap: 3px; }
+.band-ruler.is-col.is-measure-self[hidden] { display: grid !important; row-gap: 3px; }   /* 잴 때도 같은 모양(숨김은 그대로) */
+.band-ruler.is-col .br-list { display: flex; flex-direction: column-reverse; row-gap: 2px; }
+.band-ruler.is-col br { display: none; }
+.band-ruler.is-col .br-sep { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }   /* 보이지만 않게 — 글(innerText·낭독)에는 ' · ' 그대로 */
+.band-ruler.is-col .br-i { display: grid; grid-template-columns: 2.2em auto; column-gap: 8px; align-items: baseline; }
+.band-ruler.is-col .br-i b { grid-column: 1; grid-row: 1; justify-self: end; }
+.band-ruler.is-col .br-i .br-l { grid-column: 2; grid-row: 1; }
+.keys, .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.scroll-hint { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-small); font-weight: var(--w-ui); color: var(--c-ink-2); text-decoration: none; }
+.scroll-hint svg { width: 12px; height: 12px; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 44px;
+  font-weight: var(--w-ui); font-size: 16px; line-height: 1;
+  padding: 13px 20px 14px; border-radius: 4px; border: 2px solid var(--c-ink);
+  transition: transform var(--dur-ui) var(--ease-ui);
+}
+.btn:active { transform: translateY(2px); }
+.btn svg { width: 16px; height: 16px; }
+.btn-sm { font-size: var(--fs-small); padding: 9px 13px 10px; border-width: 1.5px; min-height: 40px; }
+.btn-primary { background: var(--c-ink); color: var(--c-paper); }
+.btn-ghost { background: color-mix(in srgb, var(--c-paper) 85%, transparent); color: var(--c-ink); }
+/* 버튼 높이 단(v0.6 F2, R11 7): 보통 .btn 44~47 · 작은 .btn-sm 40 · 압축 36(짧은 휴대폰 S0·S5 버튼, 낮은 화면만) */
+/* v0.6 F2(R7 4·R11 11): 정밀 포인터에서만 호버 — 크기·자리는 그대로, 바탕·테두리·밑줄만. 승강기 버튼(.btn-lift)은 LED가 켜진다.
+   줄이기에서는 전환 없이 바로(아래 전역 규칙) */
+@media (hover: hover) and (pointer: fine) {
+  .btn { transition: transform var(--dur-ui) var(--ease-ui), background-color var(--dur-ui) var(--ease-ui); }
+  .btn-ghost:hover:not([aria-disabled="true"]) { background: color-mix(in srgb, var(--c-ink) 7%, var(--c-paper)); }
+  .btn-primary:hover:not([aria-disabled="true"]) { background: color-mix(in srgb, var(--c-ink) 84%, var(--c-paper)); }
+  .btn-lift:hover .ring { border-color: var(--c-led); background: var(--c-led); opacity: 1; box-shadow: 0 0 6px rgba(255, 90, 44, .7); }
+  .toggle:hover:not(.is-on):not([data-pressed="true"]) { border-color: var(--c-ink); }
+  .scroll-hint:hover { color: var(--c-ink); }
+  a:not(.btn):hover { text-decoration-thickness: 2px; }
+}
+
+/* ── 단면도 SVG ── */
+.ln-cut     { stroke: var(--c-ink);  stroke-width: var(--lw-cut);    fill: none; }
+.ln-beyond  { stroke: var(--c-ink-3); stroke-width: var(--lw-beyond); fill: none; }
+.ln-thin    { stroke: var(--c-ink-3); stroke-width: var(--lw-thin);   fill: none; }
+.ln-leader  { stroke: var(--c-ink-2); }
+.ln-guide   { stroke: var(--c-guide); stroke-width: var(--lw-thin);   fill: none; stroke-dasharray: 10 4 2 4; }
+.ln-motion  { stroke: var(--c-ink-3); stroke-width: var(--lw-thin);   fill: none; stroke-dasharray: 4 5; }
+.ln-body    { stroke: var(--c-ink);  stroke-width: var(--lw-body);   stroke-linejoin: round; stroke-linecap: round; }
+.ln-cord    { stroke: var(--c-ink);  stroke-width: var(--lw-beyond); }
+.ln-rail    { stroke: var(--c-ink-3); stroke-width: var(--lw-beyond); }
+.f-paper { fill: var(--c-paper); } .f-paper-2 { fill: var(--c-paper-2); }
+.f-concrete { fill: var(--c-concrete); } .f-aggregate { fill: var(--c-aggregate); } .f-mortar { fill: var(--c-mortar); }
+.f-wood { fill: var(--c-wood); } .f-soft { fill: var(--c-soft); } .f-soft-tint { fill: var(--c-soft-tint); }
+.f-kung { fill: var(--c-kung); } .f-ceramic { fill: var(--c-ceramic); } .f-ink { fill: var(--c-ink); } .f-lamp { fill: var(--c-lamp); }
+.s-soft { stroke: var(--c-soft); stroke-width: 1px; fill: none; }
+.s-hatch { stroke: var(--c-aggregate); stroke-width: .8px; }
+.s-grain { stroke: var(--c-wood-ink); stroke-width: .8px; fill: none; opacity: .55; }
+.s-wood { stroke: var(--c-wood-ink); stroke-width: var(--lw-body); stroke-linejoin: round; }
+.s-kung { stroke: var(--c-kung); fill: none; stroke-linecap: round; }
+.s-leaf { stroke: var(--c-soft); stroke-width: 2.2px; fill: none; stroke-linecap: round; }
+.stop-lamp { stop-color: var(--c-lamp); } .stop-kung { stop-color: var(--c-kung); }
+.band-bg { opacity: .7; }
+.burst { stroke-width: 1.3px; opacity: .55; } .burst.is-now { stroke-width: 2px; opacity: 1; }
+.fading { opacity: .4; }
+.screen { fill: var(--c-screen); } .tile { fill: var(--c-tile); stroke: var(--c-tile-face); stroke-width: .6px; } .tile-me { fill: #D6E4EE; } .tile-face { fill: var(--c-tile-face); }
+[data-meeting="over"] .laptop .call { display: none; }
+[data-meeting="over"] .laptop .screen { fill: var(--c-paper-2); }
+.svg-annot { font-family: var(--font); font-size: var(--fs-annot); font-weight: var(--w-annot); fill: var(--c-ink-2); letter-spacing: .02em; }
+.svg-tag { font-size: 12.5px; }
+.tag-chip { fill: var(--c-paper); opacity: .94; }   /* 표지 글 바탕(제목·가구 위에서도 읽힘) */ .tag-n { font-weight: 700; fill: var(--c-ink); } .tag-v { font-weight: 600; fill: var(--c-kung-ink); }
+.svg-roomtag { font-weight: 700; }
+.card-peak { font-size: 22px; font-weight: 700; fill: var(--c-kung-ink); }
+
+/* ── S0 ── */
+.m-only { display: none; }
+@media (max-width: 720px) { .m-only { display: inline; } }
+@media (max-width: 360px) { .intro-a { display: none; } }   /* S0-02 첫 문장: 엘리베이터 7F·U-03a가 같은 정보(320에서 방 자리 확보) */
+.is-measure > [hidden] { display: inline-flex !important; visibility: hidden; }   /* stage.js가 숨은 버튼까지 켠 모양으로 미리 잰다 */
+.is-measure-self[hidden] { display: block !important; visibility: hidden; }        /* v0.4.1: 숨은 큐 하나의 높이(stage.js hiddenHeight) */
+[data-stage="s0"] .room { cursor: pointer; }   /* 방 안을 누르면 그 높이에서 공이 떨어진다 */
+/* 높이 낙하 미리보기(v0.2.2 #3, 데스크톱 포인터): 그림자 공 + 치수선 + 바닥 그림자 */
+.drop-preview { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 3; pointer-events: none; overflow: visible; }
+.drop-preview .dp-ball { fill: color-mix(in srgb, var(--c-kung) 14%, transparent); stroke: var(--c-kung); stroke-width: 1.6px; stroke-dasharray: 5 4; }
+.drop-preview .dp-line { stroke: var(--c-ink-2); stroke-width: 1px; stroke-dasharray: 3 4; }
+.drop-preview .dp-tick { stroke: var(--c-ink-2); stroke-width: 1.2px; }
+.drop-preview .dp-shadow { fill: var(--c-ink); }
+/* v0.4 첫 조작 초대(S0, 첫 쿵 전까지만): 실제로 눌러도 되는 두 자리 — 유령 공(그 높이에서 떨어짐)과 바닥 '톡'.
+   맥박은 1초 뒤 세 번만(유령 공 → 0.7초 뒤 바닥). 줄이기에서는 맥박 없이 고리만 남는다 */
+.drop-invite .inv-ring { fill: none; stroke: var(--c-kung); stroke-width: 1.2px; stroke-dasharray: 2 4; opacity: .7; }
+.drop-invite .inv-tap .inv-ring { fill: color-mix(in srgb, var(--c-kung) 12%, transparent); stroke-dasharray: 3 3; opacity: 1; }
+.drop-invite .inv-ping { fill: none; stroke: var(--c-kung); stroke-width: 2px; opacity: 0; transform-box: fill-box; transform-origin: 50% 50%;
+  animation: inv-ping 2.4s var(--ease-kung, ease-out) 1s 3; }
+.drop-invite .inv-ping.is-floor { animation-delay: 1.7s; }
+@keyframes inv-ping { 0% { opacity: .85; scale: 1; } 45% { opacity: 0; scale: 1.7; } 100% { opacity: 0; scale: 1.7; } }
+.drop-invite .inv-label { fill: var(--c-kung-ink); font-weight: 700; font-size: 12.5px; }
+.drop-invite .ln-axis { stroke: var(--c-kung); stroke-width: 1px; stroke-dasharray: 14 3 2 3; fill: none; opacity: .7; }
+.drop-invite.is-invite .dp-ball { fill: color-mix(in srgb, var(--c-kung) 18%, transparent); stroke-width: 1.8px; }
+
+/* ── S2 ── */
+/* v0.4 같은 사건의 위/아래: 위 띠(7층 바닥)에 지금 듣는 쿵의 출처(점선 유령) + 같은 x 일점쇄선 중심선 → 6층 천장 표지 */
+.src-ghost .sg-ball { fill: color-mix(in srgb, var(--c-kung) 14%, transparent); stroke: var(--c-kung); stroke-width: 1.6px; stroke-dasharray: 5 4; }
+.src-ghost .sg-chair polygon, .src-ghost .sg-chair line { fill: none; stroke: var(--c-kung); stroke-width: 1.3px; stroke-dasharray: 4 3; }
+.src-ghost .sg-body { transform-box: fill-box; transform-origin: 50% 100%; }
+.src-ghost .ln-axis { stroke: var(--c-kung); stroke-width: 1px; stroke-dasharray: 14 3 2 3; fill: none; opacity: .85; }
+.src-ghost .sg-label { fill: var(--c-kung-ink); font-weight: 700; }
+.src-ghost .sg-hitring { fill: none; stroke: var(--c-kung); stroke-width: 1.6px; opacity: 0; transform-box: fill-box; transform-origin: 50% 50%; }
+.src-ghost.is-hit .sg-ball { animation: sg-squash .55s var(--ease-kung) both; }
+.src-ghost.is-hit .sg-chair { animation: sg-scrape .5s ease-out both; }
+.src-ghost.is-hit .sg-hitring { animation: sg-ring .9s ease-out both; }
+.src-ghost.is-hit .ln-axis { animation: sg-axis .9s ease-out both; }
+@keyframes sg-squash { 0% { scale: 1.12 .8; } 45% { scale: .96 1.05; } 100% { scale: 1 1; } }
+@keyframes sg-scrape { 0% { translate: -6px 0; } 100% { translate: 0 0; } }
+@keyframes sg-ring { 0% { opacity: .9; scale: .6; } 100% { opacity: 0; scale: 1.9; } }
+@keyframes sg-axis { 0% { opacity: 1; stroke-width: 2px; } 100% { opacity: .85; stroke-width: 1px; } }
+[data-place="s2-copy"] .h2 { margin-top: 10px; max-width: 13em; }
+[data-place="s2-copy"] .actions { margin-top: 26px; }
+[data-place="s2-copy"] .u06 { margin-top: 14px; }
+[data-place="s2-copy"] .cue { margin-top: 14px; font-size: var(--fs-lead); }
+/* v0.5(심사 v0.4.1, 390 CLS 0.025): 첫 재생 박자에 S2-03(또는 S2-05)과 소리 안내 S2-06이 열리며 [다시 듣기]·U-06이 밀렸다
+   → 재생 전에도 그 자리를 보이지 않게 잡아 둔다. S2-03과 S2-05는 둘 중 하나만 뜨므로 같은 칸에 겹쳐 둔다(격자 한 칸) */
+[data-place="s2-copy"] { display: grid; grid-template-columns: minmax(0, 1fr); }
+[data-place="s2-copy"] > [data-cue="s2-after"], [data-place="s2-copy"] > [data-cue="s2-empty"] { grid-row: 3; grid-column: 1; }
+[data-place="s2-copy"] > :is([data-cue="s2-after"], [data-cue="s2-empty"], [data-cue="s2-06"])[hidden] { display: block !important; visibility: hidden; }
+/* v0.5 E5(story A-E5b): S4-06 "6층의 의자 소리입니다…"는 충격 프레임에 뜬다(엔진이 hidden을 푼다). 그 전에도 자리는 잡아 둬
+   설명 상자가 커지며 [원래대로 돌리기]가 밀리지 않게 한다 */
+.callout [data-cue="s4-06"][hidden] { display: block !important; visibility: hidden; }
+/* v0.6 F2 아이디어 ① '같은 선이 내 천장이 된다'(stage.js setupSlabLabels): 6/7 슬래브 한 판을 옅은 쿵 색으로(회전해도 그 판을 따라간다),
+   이름표 두 개는 회전층 밖 겹층 — 주석 크기, 종이 칩, 판의 한 점까지 가는 지시선. 겹층은 설명 상자(.copy, z 3) 아래·회전층 위 */
+.s4-same-slab { fill: var(--c-kung); opacity: .13; }
+.slab-labels { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+.slab-leaders { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.slab-leaders .ln-leader { stroke-width: 1px; }
+.slab-label {
+  position: absolute; left: 0; top: 0; padding: 3px 8px 4px; border: 1px solid var(--c-ink); border-radius: 3px; background: var(--c-paper);
+  font-size: 13px; font-weight: 720; line-height: 1.2; white-space: nowrap; color: var(--c-ink); transform-origin: 50% 50%;
+}
+@media (max-width: 720px) { .slab-label { font-size: var(--fs-annot); padding: 2px 6px 3px; } }
+/* v0.5 E5: S4 '6층 의자' 표지(stage.js drawS4Chair). 글이 사람 쪽으로 서 있는 것은 뒤집힌 동안뿐이라 그때만 보인다 */
+#main:not([data-perspective="downstairs"]) .s4-chair-mark { display: none; }
+/* v0.7 F3-12(mob-4): 듣는 동안 S4 방 이름표(7층·6층·5층)는 회전층과 함께 거꾸로 서고, 천장으로 떨어진 의자·머그·글 블록 위에 얹혔다
+   (physics F3가 의자를 고정 열 x 0.8로 옮긴 뒤 390·320·844에서). 그때 층은 선 이름표(6층 바닥 / 7층 천장)와 머리띠가 말한다 → 숨긴다 */
+#main[data-perspective="downstairs"] [data-stage="s4"] .roomtag { display: none; }
+/* v0.9 G6(judge F3-10·N8): 도는 동안(1440·1280 56°·236°) 회전층이 줄어 방 이름표가 10.8~11.3px이 됐다 → 이름표는 바로 선 두 자세
+   (준비·정착, 배율 1)에서만 보인다. 도는 동안 층은 선 이름표와 머리띠 '지금 세 층 모두'가 말한다 */
+[data-stage="s4"] [data-flip-layer][data-climax-phase]:not([data-climax-phase="ready"]):not([data-climax-phase="settle"]) .roomtag { display: none; }
+/* v0.9b: 낮은 화면은 복귀 설명이 오른쪽 아래(6층 방 오른쪽)에 앉아 '6층' 이름표를 덮는다(844·740 전부, 667 반쪽) → 보이는 동안 숨긴다. 6층은 판 이름표 '6층 천장'이 말한다 */
+[data-perspective="upstairs"][data-flip-returned] [data-stage="s4"][data-short] .roomtag[data-room="6층"] { display: none; }
+/* v0.9 G3(judge N2): 낮은 화면(844×390·320×568)은 복귀·정착 때 S4-02 글 블록("중력을 뒤집으면?")이 6층 바닥 밑 띠로 내려앉아 6층 의자·
+   버튼 줄과 겹쳤다. 그 글은 뒤집기 전 질문이라 돌아온 뒤에는 할 일이 끝났다 → 복귀·정착 동안만 가린다(물리 바디는 그대로) */
+@media (max-height: 699px) {
+  [data-stage="s4"] [data-flip-layer]:is([data-climax-phase="return"], [data-climax-phase="settle"]) [data-physics-body="copy:0"] { visibility: hidden !important; }
+}
+.s4-chair-mark .ln-axis { stroke: var(--c-kung); stroke-width: 1px; stroke-dasharray: 14 3 2 3; fill: none; opacity: .85; }
+/* v0.4 S2-03은 재생 박자마다 "같은 쿵 #n · 값"이 바뀌어 휴대폰에서 1줄 ↔ 2줄을 오간다 → 두 줄 자리를 늘 잡아 [다시 듣기]가 오르내리지 않게 */
+@media (max-width: 720px) { [data-place="s2-copy"] [data-cue="s2-after"] { min-height: 3.5em; min-height: 2lh; } }
+/* 짧은 휴대폰(stage.js가 .is-compact): 글 묶음이 6층 가구·바닥 위로 넘치지 않게 한 단계 작게, 간격도 좁게 */
+.copy.is-compact [data-place="s2-copy"] .lead { font-size: var(--fs-ui); }
+.copy.is-compact [data-place="s2-copy"] .h2 { font-size: var(--fs-h3); margin-top: 4px; }   /* 짧은 휴대폰 장면 제목 24 하나(S3·S5와 같게) */
+.copy.is-compact [data-place="s2-copy"] .cue { font-size: var(--fs-ui); margin-top: 8px; }
+.copy.is-compact [data-place="s2-copy"] .actions { margin-top: 12px; }
+.copy.is-compact [data-place="s2-copy"] .u06 { margin-top: 8px; font-size: 13px; }   /* v0.7 F3-10: 짧은 휴대폰은 낮은 화면과 같은 13 */
+/* v0.4.1 넓지만 낮은 화면(stage.js가 .is-fit, 1280×720·1366×768 등): 바닥·6층 의자 위로 넘치지 않게 제목 한 단계, 간격 좁게 */
+.copy.is-fit [data-place="s2-copy"] .h2 { margin-top: 6px; }   /* v0.6: 크기는 높이에 묶인 --fs-h2 그대로(S3·S5와 같게) */
+.copy.is-fit [data-place="s2-copy"] .cue { margin-top: 10px; }
+.copy.is-fit [data-place="s2-copy"] .cue-sound { margin-top: 6px; }
+.copy.is-fit [data-place="s2-copy"] .actions { margin-top: 16px; }
+.copy.is-fit [data-place="s2-copy"] .u06 { margin-top: 8px; }
+.copy.is-tight [data-place="s2-copy"] .lead { font-size: 18px; }
+.copy.is-tight [data-place="s2-copy"] .h2 { font-size: clamp(32px, 3vw, 42px); margin-top: 4px; }
+.copy.is-tight [data-place="s2-copy"] .cue { font-size: 18px; margin-top: 8px; }
+.copy.is-tight [data-place="s2-copy"] .cue-sound { font-size: var(--fs-small); margin-top: 4px; }
+.copy.is-tight [data-place="s2-copy"] .actions { margin-top: 12px; }
+.copy.is-tight [data-place="s2-copy"] .u06 { margin-top: 6px; }
+
+/* ── S3 ── */
+[data-place="s3-top"] .actions { margin-top: 14px; }
+[data-place="s3-key"] { max-width: 11em; }
+[data-place="s3-below"] { font-size: var(--fs-small); color: var(--c-ink); background: var(--c-paper-2); padding: 2px 6px; }
+
+/* ── S4 절정 ── */
+.flip-layer { position: absolute; inset: 0; transform-origin: 50% 50%; isolation: isolate; }   /* 무대 전체가 한 겹: 안의 물건(z 5)이 밖의 큐 상자·버튼 위로 나오지 않게 */
+.flip-layer .block { position: absolute; left: 0; top: 0; margin: 0; z-index: var(--z-bodies); font-weight: 720; font-size: clamp(22px, 2.4vw, 34px); line-height: 1.2; white-space: nowrap; transform-origin: 0 0; }
+[data-perspective="downstairs"] .flip-layer .block { color: var(--c-ink-2); }
+.controls { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+.controls .hint { font-size: var(--fs-small); color: var(--c-ink-2); background: color-mix(in srgb, var(--c-paper) 80%, transparent); padding: 2px 4px; }
+/* v0.2 #6 데스크톱: 무대 오른쪽 아래 도면 표제란 자리. 반투명 종이 바탕이라 뒤로 굴러온 물건이 비쳐도 버튼·힌트는 읽힌다 */
+/* v0.2.2: 5층 바닥 아래 슬래브 띠 안에 한 줄로 — 물건은 슬래브에 들어오지 않으므로 복귀 뒤에도 화분·글 블록을 덮지 않는다 */
+.controls.is-corner {
+  flex-direction: row; align-items: center; gap: 14px; padding: 7px 14px 7px 8px;
+  background: color-mix(in srgb, var(--c-paper) 92%, transparent); border: 1.5px solid var(--c-ink);
+  box-shadow: 4px 4px 0 var(--c-guide);
+}
+.controls.is-corner .hint { background: none; padding: 2px 0 2px 14px; border-left: var(--lw-thin) solid var(--c-ink-3); white-space: nowrap; }
+/* v0.6 F2b(story S4-22·23, contest R2-4): 한 번 뒤집어 본 뒤 — 주 행동은 '다시 7층으로'(아래로 가는 길, S0 '아래층으로'와 같은 글+아래 화살표 꼴),
+   [한 번 더 뒤집기]는 보조 모양으로 낮춘다(동작은 같다). 데스크톱 힌트 S4-04는 숨긴다. 상태 [data-flip-again]·글·링크 hidden은 arch(hooks.js showControls).
+   휴대폰은 한 줄, 모자라면 둘째 줄로(stage.js watchControls가 자리를 다시 잰다). 첫 상태에서는 잴 때(.is-measure)도 링크를 세지 않는다 */
+.controls:not([data-flip-again]) .s4-next { display: none !important; }
+.controls[data-flip-again] .s4-next:not([hidden]) { display: inline-flex; }
+.controls .s4-next { text-decoration: none; }
+.controls .s4-next svg { width: 12px; height: 12px; }
+@media (hover: hover) and (pointer: fine) {
+  .controls[data-flip-again] [data-action="flip"]:hover:not([aria-disabled="true"]) { background: color-mix(in srgb, var(--c-ink) 7%, var(--c-paper)); }
+}
+.controls[data-flip-again] [data-action="flip"] { background: color-mix(in srgb, var(--c-paper) 85%, transparent); color: var(--c-ink); }
+.controls[data-flip-again] .hint, .controls .hint[hidden] { display: none !important; }   /* 잴 때(.is-measure)도 세지 않는다 */
+/* v0.9 G2(judge N1 — 844 정착 CLS 0.144, 320 0.036): 휴대폰·낮은 화면은 둘째 상태가 되며 [다시 7층으로]가 나타나 버튼 줄이 커졌고,
+   그 상자에 맞춰 버튼·복귀 설명이 밀렸다 → ① [다시 7층으로] 칸을 처음부터 보이지 않게 잡아 두고(visibility), ② [중력 뒤집기]를 늘 첫째
+   (왼쪽 아래)에 두고 줄은 아래에서 위로 쌓는다(wrap-reverse — 둘째 줄이 생기면 위에), ③ 상자 크기는 stage.js가 둘째 상태 모양을
+   복제해 잰 값으로 미리 잡는다(min-width·min-height). 넓은 화면(구석 상자)은 밀림이 없어 그대로 */
+.controls:not(.is-corner) { flex-direction: row; flex-wrap: wrap-reverse; align-items: flex-start; align-content: flex-start; gap: 8px 10px; }
+.controls:not(.is-corner) .s4-next { order: 2; display: inline-flex !important; }
+.controls:not(.is-corner):not([data-flip-again]) .s4-next, .controls:not(.is-corner) .s4-next[hidden] { visibility: hidden; }
+@media (max-width: 720px) {   /* 휴대폰: 두 버튼을 작은 단(40)으로 — 390에서 한 줄 */
+  .controls[data-flip-again] .btn { font-size: var(--fs-small); padding: 9px 13px 10px; min-height: 40px; border-width: 1.5px; }
+}
+/* v0.6 F2(motion R10-5): 480 이하 준비·회전 동안의 고정 질문(stage.js가 copy:0 쉬는 자리에 둔다). 회전층 밖이라 늘 바로 선다.
+   지나가는 단면선 위에서도 읽히게 종이색 테두리 빛만 두른다(상자 없이 — 원래 글 블록과 같은 꼴) */
+.s4-question {
+  position: absolute; left: 0; top: 0; margin: 0; z-index: 3; pointer-events: none; white-space: nowrap;
+  font-weight: 720; font-size: clamp(22px, 2.4vw, 34px); line-height: 1.2; color: var(--c-ink);
+  text-shadow: 0 0 2px var(--c-paper), 0 0 4px var(--c-paper), 0 0 8px var(--c-paper);
+}
+@media (max-width: 720px) { .s4-question { font-size: 17px; } }
+.callout { background: var(--c-paper); border: 1.5px solid var(--c-ink); padding: 22px 26px 24px; box-shadow: 6px 6px 0 var(--c-guide); }
+.callout .display { font-size: var(--fs-climax); white-space: normal; line-height: 1.08; }   /* v0.6 F2(R7 2): 절정은 장면 제목보다 크다(1440 80) */
+.callout .s406 { margin-top: 12px; font-size: var(--fs-lead); line-height: 1.5; color: var(--c-ink-2); max-width: 30ch; }
+/* v0.5 E5: 낮은 창(1280×720 등)의 듣기 설명은 넓은 상자 — 큰 글·S4-06을 한 줄씩(stage.js .is-wide) */
+.callout.is-wide .display { white-space: nowrap; }
+.callout.is-wide .s406 { max-width: none; margin-top: 8px; }
+.callout.is-wide .btn { margin-top: 12px; }
+.callout .btn { margin-top: 18px; }
+.callout-return .h2 { margin-top: 8px; font-size: var(--fs-h2s); text-wrap: wrap; }
+[data-flip-cue] { display: none; }
+[data-flip-cue].is-measure-self { display: block !important; visibility: hidden; }   /* v0.6 F2: stage.js가 숨은 복귀 설명의 높이를 잰다 */
+.is-measure-self[hidden] { display: block !important; visibility: hidden !important; }   /* v0.8: 숨은 큐 일반(S0 띠 한 줄 눈금) — 같은 동기 구간에서만 */
+[data-perspective="downstairs"] [data-flip-cue="listen"] { display: block; }
+/* v0.7 F3-11(global R ③, masked-reveal 원리): 절정 한 줄만 '쿵이 오는 방향(위 → 아래)'으로 닦여 드러나고 0.2em 내려앉는다.
+   듣기에 들어설 때마다(display none → block) 한 번. 단어별 시차 없음. 일시정지 중엔 규칙 자체를 빼서 첫 프레임(전부 가림)에
+   멈추지 않게 하고(html:not([data-motion-paused])), 줄이기는 전역 animation: none으로 바로 보인다. 글 상자 크기는 그대로(잴 값 불변) */
+/* 양 끝 모두 inset()이라야 보간된다(none과는 중간에 한 번에 바뀐다 — 실측). backwards라 끝나면 clip-path가 남지 않는다
+   (0.36초 동안 줄 상자 밖으로 나온 잉크가 잠깐 잘릴 수 있다 — 끝나면 없음) */
+@keyframes cue-wipe { from { clip-path: inset(0 0 100% 0); translate: 0 -.2em; } to { clip-path: inset(0 0 0 0); translate: 0 0; } }
+/* v0.7c(조율 결정 · arch 엔진 방식): 엔진이 움직임을 허용한 새 듣기 진입에만 #main[data-climax-wipe]를 붙이고, 일시정지·줄이기·듣기
+   이탈에서 바로 뗀다. 듣던 자리에서 재개해도 다시 붙이지 않는다 → 닦임은 듣기 진입당 한 번, 재개 때 다시 돌지 않는다 */
+html:not([data-motion-paused]) #main[data-climax-wipe][data-perspective="downstairs"] [data-flip-cue="listen"] .display { animation: cue-wipe .36s var(--ease-kung) backwards; }
+[data-perspective="upstairs"][data-flip-returned] [data-flip-cue="return"] { display: block; }
+[data-perspective="downstairs"] [data-place="s4-controls"] { visibility: hidden; }
+[data-perspective="downstairs"] [data-react="7"]:not([hidden]) { display: block !important; }   /* v0.7 F3(motion): E5가 hidden을 푼 프레임부터만 */
+.pbody.is-settled { transition: none; }
+.callout .s419 { margin-top: 10px; font-size: var(--fs-small); color: var(--c-ink-2); }
+
+/* ── v0.3 S4 휴대폰으로 뒤집기(센서 카드, S4-10~S4-16) ── */
+.sensor {
+  display: flex; gap: 14px; align-items: flex-start; padding: 16px 18px 16px 14px;
+  background: var(--c-paper); border: 1.5px solid var(--c-ink); border-radius: 8px; box-shadow: 5px 5px 0 var(--c-guide);
+}
+.sensor-phone { width: 44px; height: 48px; flex: none; color: var(--c-ink); }
+.sensor-title { font-weight: var(--w-h2); font-size: 19px; line-height: 1.35; }
+.sensor-small { margin-top: 4px; font-size: var(--fs-small); color: var(--c-ink-2); line-height: 1.5; }
+.sensor-actions { margin-top: 12px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; }
+.sensor-fine { margin-top: 10px; font-size: var(--fs-annot); line-height: 1.55; color: var(--c-ink-2); }
+/* 권한을 받고 휴대폰을 돌리는 동안: 카드가 작아지고(제목·'버튼으로 볼게요'만) 휴대폰 그림이 천천히 돈다 */
+[data-sensor-state="requesting"] .sensor :is(.sensor-small, .sensor-fine, [data-action="sensor-enable"]),
+[data-sensor-state="tilting"] .sensor :is(.sensor-small, .sensor-fine, [data-action="sensor-enable"]) { display: none !important; }
+[data-sensor-state="tilting"] .sensor-phone { animation: phone-turn 2.4s var(--ease-flip) infinite; }
+@keyframes phone-turn { 0%, 15% { rotate: 0deg; } 55%, 75% { rotate: 180deg; } 100% { rotate: 360deg; } }
+[data-sensor-state="inverted"] .sensor, [data-sensor-state="returned"] .sensor, [data-sensor-state="fallback"] .sensor { display: none !important; }
+/* 센서 알림 묶음(버튼 위): 상태 글은 비면 안 보이고, 여러 줄이 와도 겹치지 않고 쌓인다 */
+.sensor-msgs { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; pointer-events: none; }
+.sensor-msgs.is-right { align-items: flex-end; }
+.sensor-status {
+  padding: 7px 12px; background: var(--c-paper); border: 1.5px solid var(--c-ink); border-radius: 6px;
+  font-weight: var(--w-ui); font-size: var(--fs-small); line-height: 1.45; box-shadow: 3px 3px 0 var(--c-guide);
+}
+.sensor-status:empty { display: none; }
+.sensor-status.is-quiet { font-weight: var(--w-body); color: var(--c-ink-2); box-shadow: none; }
+/* 실패·시간 초과·화면 돌아감 → 버튼 경로: 중력 뒤집기 버튼을 한 번 두드러지게 */
+:is([data-sensor-state="fallback"], [data-sensor-state="tilting"]) [data-action="flip"] { box-shadow: 0 0 0 4px var(--c-kung-tint), 0 0 0 5.5px var(--c-kung); }
+[data-sensor-state="fallback"] [data-action="flip"] { animation: flip-call .9s var(--ease-ui) 2; }
+@keyframes flip-call { 50% { box-shadow: 0 0 0 9px var(--c-kung-tint), 0 0 0 10.5px var(--c-kung); } }
+/* 센서로 뒤집힌 동안: 무대는 돌지 않고 사람이 휴대폰을 돌렸다 → 듣기 큐와 '…?'를 기기 기준 180° 돌려 사람에게 똑바로(5.2절) */
+[data-sensor-state="inverted"] [data-flip-cue="listen"],
+[data-sensor-state="inverted"] [data-react="7"] { rotate: 180deg; }
+
+/* ── v0.3 S1 · 같은 방, 던지기·끌기 ── */
+.scene[data-scene="s1"] { min-height: 100svh; }
+.s1-h { font-weight: var(--w-h2); font-size: clamp(22px, 2vw, 28px); line-height: 1.35; letter-spacing: -0.01em; }
+[data-place="s1-note"] .cue { margin-top: 10px; color: var(--c-ink-2); font-weight: var(--w-body); font-size: var(--fs-ui); }
+[data-place="s1-note"] .keys { margin-top: 14px; }
+[data-physics-gesture] { cursor: grab; touch-action: pan-y; }
+[data-physics-gesture].is-grabbed { cursor: grabbing; }
+[data-stage][aria-disabled="true"] [data-physics-gesture], [data-listening] [data-physics-gesture] { cursor: default; }
+/* S1-03이 보이는 동안: 의자 다리 밑에 '밀 수 있음' 표시(양쪽 화살표 점선), 공 위에 잡는 손 자리(점선 고리) */
+#s1:has([data-cue="s1-03"]:not([hidden])) [data-physics-gesture="drag-chair"]::after {
+  content: ""; position: absolute; left: -14px; right: -14px; bottom: -9px; height: 0; border-top: 1.5px dashed var(--c-ink-2);
+}
+#s1:has([data-cue="s1-03"]:not([hidden])) [data-physics-gesture="drag-chair"]::before {
+  content: ""; position: absolute; left: -18px; right: -18px; bottom: -13px; height: 8px;
+  background: linear-gradient(135deg, transparent 48%, var(--c-ink-2) 50% 62%, transparent 64%) left / 8px 8px no-repeat,
+              linear-gradient(45deg, transparent 36%, var(--c-ink-2) 38% 50%, transparent 52%) right / 8px 8px no-repeat;
+}
+#s1:has([data-cue="s1-03"]:not([hidden])) [data-physics-gesture="throw-ball"] { outline: 1.5px dashed var(--c-kung); outline-offset: 6px; border-radius: 50%; }
+/* 의자를 꾹 누르는 0.3초 동안 차오르는 고리(터치). 엔진이 left·top(누른 점)과 hidden을 맡는다 */
+.grab-ring {
+  position: absolute; z-index: calc(var(--z-bodies) + 1); width: 52px; height: 52px; margin: -26px 0 0 -26px; border-radius: 50%; pointer-events: none;
+  background: conic-gradient(var(--c-kung) calc(var(--hold, 0) * 360deg), color-mix(in srgb, var(--c-ink) 12%, transparent) 0);
+  -webkit-mask: radial-gradient(circle, transparent 20px, #000 21px); mask: radial-gradient(circle, transparent 20px, #000 21px);
+  animation: grab-fill .3s linear forwards;
+}
+@property --hold { syntax: "<number>"; inherits: false; initial-value: 0; }
+@keyframes grab-fill { from { --hold: 0; } to { --hold: 1; } }
+/* 끌기 자국: 마루 켜 안쪽 두 줄이 2.4초에 걸쳐 사라진다 */
+.scuff line { stroke: var(--c-wood-ink); stroke-width: 1.4px; stroke-linecap: round; }
+.scuff { animation: scuff-fade 2.4s ease-in forwards; }
+@keyframes scuff-fade { from { opacity: .9; } to { opacity: 0; } }
+.burst.scrape { stroke-linejoin: round; }
+
+/* ── v0.3 S2-06 소리 안내 ── */
+[data-place="s2-copy"] .cue-sound { font-weight: var(--w-body); font-size: var(--fs-ui); color: var(--c-ink-2); max-width: 30em; }
+
+/* ── v0.3 S5 · 다시 7층, 매트 한 장 ── */
+.scene[data-scene="s5"] { min-height: 130svh; }
+/* v0.3.1: 부제 세 가지(S5-08·S5-08b·S5-02)를 한 칸(둘째 줄)에 겹친다 → 제목 묶음 높이 = 가장 긴 부제, 바뀌어도 밀리지 않는다.
+   숨은 부제도 자리는 잡고(visibility), 화면·읽기에서는 빠진다 */
+[data-place="s5-head"] { display: grid; align-content: start; }
+[data-place="s5-head"] > .lead { grid-area: 2 / 1; margin-top: 10px; text-wrap: balance; }
+[data-place="s5-head"] > .lead[hidden] { display: block !important; visibility: hidden; }
+.nowrap { white-space: nowrap; }
+#s5 .s502 { visibility: hidden; }
+#s5:is([data-mat-test="laid"], [data-mat-test="dropping-after"], [data-mat-test="done"]) .s502 { visibility: visible; }
+#s5:is([data-mat-test="laid"], [data-mat-test="dropping-after"], [data-mat-test="done"]) [data-cue^="s5-08"] { visibility: hidden !important; }
+/* 시험 순서 ①②③: 차례인 단계는 진한 버튼, 마친 단계는 번호 자리에 체크 */
+.steps { list-style: none; margin: 0; padding: 0; counter-reset: step; display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+.steps li { counter-increment: step; }
+.steps.is-row { flex-direction: row; flex-wrap: wrap; gap: 6px; }
+.step { gap: 9px; padding-left: 9px; padding-top: 7px; padding-bottom: 7px; }   /* v0.6 F2(R11 7): 번호 원이 있어도 작은 버튼 40(43이던 것) */
+.step::before {
+  content: counter(step); flex: none; display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%;
+  border: 1.5px solid currentColor; font-size: var(--fs-annot); font-weight: 760; line-height: 1;
+}
+.step .t-again, #s5[data-mat-test="done"] .step .t-first { display: none; }
+#s5[data-mat-test="done"] .step .t-again { display: inline; }
+#s5:is([data-mat-test="ready"], [data-mat-test="dropping-before"]) .step[data-action="mat-before"],
+#s5[data-mat-test="before"] .step[data-action="mat-lay"],
+#s5:is([data-mat-test="laid"], [data-mat-test="dropping-after"]) .step[data-action="mat-after"] { background: var(--c-ink); color: var(--c-paper); }
+#s5:is([data-mat-test="before"], [data-mat-test="laid"], [data-mat-test="dropping-after"], [data-mat-test="done"]) .step[data-action="mat-before"]::before,
+#s5:is([data-mat-test="laid"], [data-mat-test="dropping-after"], [data-mat-test="done"]) .step[data-action="mat-lay"]::before {
+  content: ""; border-color: var(--c-soft);
+  background: var(--c-soft) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.6 6.3l2.3 2.3 4.5-5' fill='none' stroke='white' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 12px no-repeat;
+}
+/* 결과(S5-04)와 정직성 줄(S5-07, 늘 보임) */
+.mat-result .cue { font-size: var(--fs-lead); line-height: 1.5; }
+.mat-result b { font-weight: 800; }
+.v-before { color: var(--c-kung-ink); }
+.v-after { color: var(--c-soft-ink); }
+.mat-result .s507 { margin-top: 6px; font-size: var(--fs-annot); line-height: 1.55; color: var(--c-ink-2); }
+.mat-lamp { font-weight: var(--w-ui); font-size: var(--fs-ui); background: color-mix(in srgb, var(--c-paper-2) 85%, transparent); padding: 2px 6px; }
+.mat-key { font-size: var(--fs-h2); line-height: 1.14; white-space: nowrap; }   /* S5-06 결론 = 장면 제목 단 */
+.copy.key-replaces-head:has(> [data-cue="s5-after"]:not([hidden])) > [data-place="s5-head"],
+.copy.key-replaces-head:has(> [data-cue="s5-after"]:not([hidden])) > [data-place="s5-head"] * { visibility: hidden !important; }   /* 부제 칸의 visibility 규칙보다 앞서게 */
+/* 매트 자리(점선) ↔ 깐 매트 */
+.ln-spot { fill: none; stroke: var(--c-soft); stroke-width: 1.5px; stroke-dasharray: 5 4; }
+.ln-mat { stroke: var(--c-ink); stroke-width: 1.25px; }
+.mat-annot { fill: var(--c-soft-ink); font-weight: 600; }
+.when-on { display: none; }
+#s5:has([data-mat]:not([hidden])) .when-off { display: none; }
+#s5:has([data-mat]:not([hidden])) .when-on { display: inline; }
+.pbody.mat svg { left: 0; translate: none; }
+.pbody.mat:not([hidden]) { animation: mat-unroll .8s var(--ease-ui) both; }
+@keyframes mat-unroll { from { clip-path: inset(-2px 100% -2px 0); } to { clip-path: inset(-2px 0 -2px 0); } }
+.mat-roll { position: absolute; z-index: var(--z-bodies); cursor: pointer; transform-origin: 50% 100%; }
+.mat-roll svg { display: block; }
+.pbody.mat:not([hidden]) + .mat-roll { animation: roll-away .8s var(--ease-ui) forwards; pointer-events: none; }
+.pbody.mat:not([hidden]) + .mat-roll svg { animation: roll-turn .8s var(--ease-ui) forwards; }
+@keyframes roll-away { 85% { opacity: 1; } to { translate: var(--roll-dx) 0; scale: .3; opacity: 0; } }
+@keyframes roll-turn { to { rotate: var(--roll-turn); } }
+/* 막대: 맨바닥 = 쿵 색, 매트 위 = 완충재 무늬. 새 값은 바닥에서 자라난다 */
+.bar { stroke-width: 1.5px; transform-box: fill-box; transform-origin: 50% 100%; }
+.bar.is-before { fill: var(--c-kung); stroke: var(--c-kung-ink); }
+.bar.is-after { fill: url(#pat-soft); stroke: var(--c-soft-ink); }
+.bar.is-new { animation: bar-grow .7s var(--ease-kung) both; }
+@keyframes bar-grow { from { scale: 1 0; } }
+.bar-slot { fill: none; stroke: var(--c-ink-3); stroke-width: 1px; stroke-dasharray: 3 3; }
+.bar-v { font-family: var(--font); font-weight: 800; }
+.bar-v.is-before { fill: var(--c-kung-ink); } .bar-v.is-after { fill: var(--c-soft-ink); }
+.dim-ext { stroke: var(--c-ink-2); stroke-width: 1px; stroke-dasharray: 3 3; }
+.dim-line { stroke: var(--c-soft-ink); stroke-width: 1.4px; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.dim-tick { stroke: var(--c-ink-2); stroke-width: 1.2px; }
+.burst.is-past { opacity: .25; }
+.burst.is-soft { stroke: var(--c-soft); }
+/* 6층 펜던트 대비: 맨바닥 때 흔들린 만큼(쿵 색 점선)과 매트 위에서(완충 색) */
+.lamp-ghost { fill: none; stroke-width: 1.4px; stroke-linejoin: round; }
+.lamp-ghost.is-before { stroke: var(--c-kung); stroke-dasharray: 4 3; }
+.lamp-ghost.is-after { stroke: var(--c-soft-ink); }
+/* v0.4 같은 이름표: 막대(7층, 원인)와 조명 잔상(6층, 결과)에 같은 낱말·같은 색 */
+.mat-tag { font-weight: 700; }
+.mat-tag.is-before { fill: var(--c-kung-ink); } .mat-tag.is-after { fill: var(--c-soft-ink); }
+.lamp-arc { stroke-width: 1px; }
+
+/* ── S6 끝 화면: 엘리베이터 안 ── */
+.scene-end .panel { position: relative; height: auto; min-height: 100svh; overflow: visible; }
+.end {
+  position: relative; z-index: var(--z-copy);
+  display: grid; grid-template-columns: auto minmax(0, 1fr);
+  /* v0.5: 카드·제목·버튼 줄 아래에 E2 '오늘 확인한 것'(층별 안내판, 전체 폭) → E3 '할 수 있는 한 가지' → 투표. 읽는 순서 = DOM 순서(story v5 1절) */
+  grid-template-areas: "card title" "card side" "card band" "recap recap" "next next" "vote vote";
+  grid-template-rows: auto auto 1fr auto auto auto; column-gap: clamp(40px, 5vw, 88px);
+  padding: calc(var(--hud-h) + 44px) calc(var(--margin) + 26px) 64px;   /* v0.6 F2(R11 5): 왼쪽 선 = 다른 장면의 글 시작선(벽 안 +26) */
+}
+.end .title { grid-area: title; font-size: var(--fs-h2s); padding-top: 18px; }
+/* v0.2 #8 · v0.2.2 #5④: 절정을 못 보고 내려온 사람에게 한 줄(엘리베이터 안내문처럼 얇은 띠).
+   패널 맨 끝에 두고 화면 아래에 붙인다(sticky) → 나타날 때 카드·제목이 밀리지 않는다 */
+.missed {
+  position: sticky; bottom: max(14px, env(safe-area-inset-bottom)); z-index: calc(var(--z-copy) + 1);
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 14px;
+  width: fit-content; max-width: calc(100% - 2 * var(--margin)); margin: 0 auto 18px;
+  padding: 8px 8px 8px 16px; background: var(--c-paper); border: 1.5px solid var(--c-ink); border-radius: 6px;
+  box-shadow: 4px 4px 0 var(--c-guide);
+  font-weight: var(--w-ui); font-size: var(--fs-ui); line-height: 1.4;
+}
+.missed .btn { text-decoration: none; }
+.missed .btn svg { width: 12px; height: 12px; }
+/* v0.5 넓은 화면: 오른쪽 단 카드 높이 안 남는 칸(band, 1fr 행). 칸이 이미 있어 나타나도 아무것도 밀리지 않고, 아래 E2 안내판을 덮지 않는다 */
+.end > .missed { grid-area: band; position: static; align-self: start; justify-self: start; max-width: 520px; margin: 22px 0 0; }
+/* v1.0c: 눈금이 오른쪽 단에 있으면(C2) 오른쪽 단이 카드보다 길어 band 행이 단 아래로 밀린다(1280 S6 도착 화면 밖).
+   v1.0b의 화면 아래 고정 띠는 눈금 줄·'내 최대 쿵' 칩을 가렸다 → 단 안 흐름(안내문 아래, 눈금 제목 위)으로 옮긴다(stage.js).
+   S6 높이는 stage.js가 띠가 보이는 높이로 잡아 두므로 켜고 꺼도 문서 높이는 그대로다 */
+.side > .missed { position: static; margin: 18px 0 0; max-width: none; justify-content: flex-start; }
+/* v1.0e(judge N13): S6 오른쪽 단 높이를 'S6에 들어갈 때 될 상태'로 미리 잡는다(stage.js sizeSide).
+   기록이 있으면 빈 상태 안내를 S6이 화면 밖일 때 미리 접고, 아직 뒤집지 않았으면 띠 자리를 숨긴 채로 잡아 둔다(S6 활성 때 그 자리에 켜짐) */
+#s6[data-s6-will-done][data-result-state] .end-empty { display: none; }   /* 아래 '#s6[data-result-state="empty"] .end-empty'보다 앞서게(속성 둘) */
+#s6[data-s6-band-reserve] .side > .missed[hidden] { display: flex !important; visibility: hidden; }
+.end .board { grid-area: card; align-self: start; }   /* v0.9 G4: 오른쪽 단이 카드보다 길어져도 카드 판은 제 높이(빈 판이 늘어나지 않게) */
+.end .side { grid-area: side; padding-top: 26px; max-width: 520px; }
+.board { position: relative; padding: 14px; background: var(--c-paper-2); border: 2px solid var(--c-ink); border-radius: 6px; }
+.board::before, .board::after { content: ""; position: absolute; left: 4px; width: 7px; height: 7px; border-radius: 50%; border: 1.5px solid var(--c-ink-3); box-shadow: calc(var(--cw) + 15px) 0 0 -1.5px var(--c-paper-2), calc(var(--cw) + 15px) 0 0 0 var(--c-ink-3); }
+.board::before { top: 4px; } .board::after { bottom: 4px; }
+.sheet { position: relative; width: var(--cw, 480px); height: calc(var(--cw, 480px) * 1.25); }
+.sheet .card { position: absolute; left: 0; top: 0; transform-origin: 0 0; transform: scale(calc(var(--cw, 480px) / 1080px)); }
+.btn-lift { border-radius: 10px; gap: 10px; }
+.btn-lift .ring { width: 12px; height: 12px; border-radius: 50%; border: 2px solid currentColor; opacity: .7; }
+.btn-primary.btn-lift .ring { border-color: var(--c-led); background: var(--c-led); opacity: 1; box-shadow: 0 0 6px rgba(255, 90, 44, .7); }
+.feedback { margin-top: 10px; min-height: 1.5em; font-size: var(--fs-small); font-weight: var(--w-ui); }
+.share-url { margin-top: 6px; font-size: var(--fs-small); word-break: break-all; }
+.disclaim { margin-top: 12px; font-size: var(--fs-small); line-height: 1.6; color: var(--c-ink-2); }
+.vote { margin-top: 36px; padding-top: 18px; border-top: var(--lw-thin) solid var(--c-ink-3); font-size: var(--fs-body); line-height: 1.7; }
+/* v0.7 F3-8: 투표는 보조 버튼 모양(테두리, 47px) — 채운 버튼은 끝 화면에 하나뿐([카드 저장] 또는 빈 상태 [집으로]). 바로 아래 의심에 답하는 한 줄 */
+.vote .vote-btn { margin-top: 14px; text-decoration: none; }
+.vote-btn svg { width: 12px; height: 12px; }
+.vote-note { margin-top: 8px; font-size: var(--fs-small); line-height: 1.5; color: var(--c-ink-2); }
+.end > .vote { grid-area: vote; max-width: 640px; }
+/* v0.7 F3-7: [카드 저장]이 끝 화면의 주 행동 — 크게(데스크톱은 [공유하기]의 약 1.5배, 휴대폰은 폭 꽉), 버튼 안에 얻는 것("PNG 1장").
+   빈 상태는 E1 [집으로]가 주 버튼이라 저장은 보조 모양·보통 크기(아래 #s6[data-result-state="empty"] 규칙) */
+.btn-save { min-height: 52px; padding: 15px 26px 16px 22px; }
+.btn-sub { padding-left: 10px; margin-left: 2px; border-left: 1px solid color-mix(in srgb, currentColor 45%, transparent); font-size: 13px; font-weight: 520; opacity: .85; }
+#s6[data-result-state="empty"] .btn-save { min-height: 44px; padding: 13px 20px 14px; }
+
+/* v0.5 E1 S6-13: 기록 0으로 도착한 사람(arch #s6[data-result-state="empty"]). 엘리베이터 안내문 모양(절정 띠와 같은 문법),
+   카드 큰 숫자 0에서 눈이 바로 닿는 오른쪽 단 맨 위(휴대폰은 카드 바로 아래). 이때 [7층으로]가 주 버튼, [카드 저장]은 보조 모양 */
+.end-empty { display: none; }
+#s6[data-result-state="empty"] .end-empty { display: flex; }
+.end-empty {
+  flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-bottom: 16px; padding: 10px 10px 10px 16px;
+  background: var(--c-paper); border: 1.5px solid var(--c-ink); border-radius: 6px; box-shadow: 4px 4px 0 var(--c-guide);
+  font-weight: var(--w-ui); font-size: var(--fs-ui); line-height: 1.45;
+}
+.end-empty p { flex: 1 1 15em; }
+.end-empty .btn { text-decoration: none; }
+.end-empty .btn svg { width: 12px; height: 12px; }
+#s6[data-result-state="empty"] [data-action="save"].btn-primary { background: color-mix(in srgb, var(--c-paper) 85%, transparent); color: var(--c-ink); }
+#s6[data-result-state="empty"] [data-action="save"] .ring { border-color: currentColor; background: none; box-shadow: none; opacity: .7; }
+
+/* v0.5 E2 S6-14 '오늘 확인한 것': 승강기 층별 안내판. 판(2px 테두리 + 나사)에 세 칸, 칸마다 층 칩(엘리베이터 표시와 같은 LED) +
+   작은 제목 + '무엇 → 어디' 값 줄. 값이 있으면(data-state="done", arch) 쿵 주황 → 받는 자리, ③은 쿵 주황 → 완충 청록.
+   빈 상태는 규칙만(회색 글, 숫자 없음). 넓은 화면은 가로 세 칸, 휴대폰은 세로 세 줄이고 값 줄의 화살표가 한 열에 선다(subgrid) */
+/* v0.6 F2(R7 3·R11 10): 끝 화면의 주인공은 카드 — 안내판·스티커는 한 단계 아래(선 가늘고 옅게, 작은 제목은 주석 크기) */
+.recap { grid-area: recap; position: relative; margin-top: 48px; padding: 14px 24px 16px; background: var(--c-paper); border: var(--lw-beyond) solid var(--c-ink-2); border-radius: 6px; }
+.recap::before, .recap::after { content: ""; position: absolute; top: 6px; width: 7px; height: 7px; border-radius: 50%; border: 1.5px solid var(--c-ink-3); }
+.recap::before { left: 6px; } .recap::after { right: 6px; }
+.recap-head { padding: 0 0 10px 8px; border-bottom: 1px solid var(--c-guide); }
+.recap-h { font-size: 13px; font-weight: 720; color: var(--c-ink-2); letter-spacing: .01em; }
+/* v0.7 F3-2(S6-16): 숫자의 뜻 = 작은 글 14·먹색(DESIGN 5.2 '숫자의 뜻·사실 고지') */
+.recap-def { margin-top: 4px; font-size: 16px; line-height: 1.55; color: var(--c-ink); max-width: 46em; }   /* v0.8: 14 → 16('아주 작은 글씨', S6-16 '두 배 아님' 문장 추가) */
+/* v0.8 S6-17 쿵 지수 견주기: 세로 눈금, 위가 큰 값(층별 안내판 문법). 줄마다 [값 | 이름] 아래 같은 축의 막대(길이 = 값/200).
+   공 = 쿵 색 채운 막대, 드르륵 = 빗금 막대 + 각주(계산이 다름), 매트 = 속 빈 청록 막대. 기준 100 줄은 굵게.
+   내 기록 = 같은 축 위 LED 바늘(엔진 --ruler-position, 0→200 = 0→100%) + 맨 아래 LED 칩(바늘 위치를 따라가되 칸 안에 머문다) */
+.ruler { margin: 14px 0 4px; padding: 0 0 14px 8px; border-bottom: 1px solid var(--c-guide); max-width: 620px; }
+.ruler-h { font-size: var(--fs-small); font-weight: 720; color: var(--c-ink-2); margin-bottom: 8px; }
+.ruler-body { --vw: 44px; position: relative; }   /* 값 칸 폭(세 자리 16px 굵은 숫자) — 막대·바늘이 같은 x에서 시작한다 */
+.ruler-body:has(> [data-ruler-mine]:not([hidden])) { padding-bottom: 40px; }   /* 칩 자리(엔진이 S6 그릴 때 연다) */
+.ruler-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; }
+.rl { display: grid; grid-template-columns: var(--vw) minmax(0, 1fr); grid-template-areas: "v t" ". b"; column-gap: 10px; row-gap: 3px; align-items: baseline; font-size: var(--fs-small); line-height: 1.35; }
+.rl-v { grid-area: v; justify-self: end; font-weight: 800; font-size: 16px; font-variant-numeric: tabular-nums; color: var(--c-kung-ink); }
+.rl-t { grid-area: t; color: var(--c-ink); }
+/* v1.0e N14: 낮은 기록(예 30)이면 '내 최대 쿵' 바늘이 줄 글자 위를 지났다 → 글자가 바늘 앞(종이 바탕으로 글자 상자만 가림). 막대 위로는 그대로 지난다 */
+.rl-v, .rl-t { position: relative; z-index: 1; }
+.rl-t { justify-self: start; background: var(--c-paper); box-shadow: 0 0 0 2px var(--c-paper); }
+.rl-bar { grid-area: b; display: block; height: 7px; width: calc(var(--v) / 200 * 100%); border-radius: 0 2px 2px 0; background: var(--c-kung); }
+.rl.is-base .rl-t { font-weight: 720; }
+.rl.is-scrape .rl-bar { background: repeating-linear-gradient(135deg, var(--c-kung) 0 3px, transparent 3px 6px); box-shadow: inset 0 0 0 1px var(--c-kung); }
+.rl.is-mat .rl-v { color: var(--c-soft-ink); }
+.rl.is-mat .rl-bar { background: var(--c-soft-tint); box-shadow: inset 0 0 0 1.5px var(--c-soft); }
+.ruler-mine { position: absolute; top: -4px; bottom: 0; left: calc(var(--vw) + 10px); right: 0; margin: 0; pointer-events: none; }
+.rm-needle { position: absolute; top: 0; bottom: 34px; left: var(--ruler-position, 0%); width: 2px; margin-left: -1px; background: var(--c-led); box-shadow: 0 0 5px rgba(255, 90, 44, .7); }
+.rm-chip {
+  position: absolute; bottom: 0; left: var(--ruler-position, 0%); translate: calc(var(--ruler-position, 0%) * -1) 0; white-space: nowrap;
+  padding: 5px 9px 6px; border-radius: 5px; background: var(--c-led-panel); box-shadow: inset 0 0 0 1.5px #2A3035;
+  color: var(--c-led); font-size: var(--fs-small); font-weight: var(--w-ui); line-height: 1.2;
+}
+.rm-chip b { font-weight: 800; font-variant-numeric: tabular-nums; }
+.ruler-mine[data-ruler-kind="scrape"] .rm-chip b::after { content: "*"; }   /* 드르륵이면 각주와 잇는다 */
+.ruler-mine[data-ruler-kind="scrape"] .rm-needle { background: repeating-linear-gradient(var(--c-led) 0 4px, transparent 4px 7px); }
+.ruler-note { margin-top: 10px; font-size: var(--fs-small); line-height: 1.5; color: var(--c-ink); }
+/* v0.9 G5 다리 줄: 눈금 줄과 다른 모양 — 위에 가는 선, 막대·바늘 없음. 본문은 기준 줄(S6-16)과 같은 16 먹, 출처는 줄을 바꿔 14 회색 */
+.ruler-bridge { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--c-guide); font-size: 16px; line-height: 1.6; color: var(--c-ink); max-width: 40em; }
+.ruler-bridge .rb-src { display: block; margin-top: 4px; font-size: var(--fs-small); line-height: 1.5; color: var(--c-ink-2); }
+/* v0.9 G4: 넓은 두 단의 오른쪽 단(버튼·면책 아래)으로 올라간 눈금 — 위 가는 선으로 나누고, 내 기록 칩 자리는 늘 잡는다(값이 나중에 와도 단이 늘지 않게) */
+.ruler.is-side { margin: 16px 0 0; padding: 16px 0 0; border-bottom: 0; border-top: 1px solid var(--c-guide); }   /* v1.0 C2: 기준 줄이 들어와 26 → 16 */
+.ruler.is-side .ruler-body { padding-bottom: 40px; }
+/* v1.0 C2: 오른쪽 단에서는 기준 한 줄(S6-16)이 눈금 제목 바로 아래로 온다(stage.js가 옮김) — 숫자보다 먼저 읽히게 */
+.ruler.is-side > .recap-def { margin: 6px 0 14px; }
+.recap-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.recap-cell {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "fl t" "fl v";
+  column-gap: 14px; row-gap: 5px; align-content: start; padding: 16px 18px 4px; border-left: 1px solid var(--c-guide);
+}
+.recap-cell:first-child { padding-left: 8px; border-left: 0; }
+.rc-fl {
+  grid-area: fl; align-self: start; display: inline-grid; justify-items: center; gap: 2px; min-width: 40px; padding: 6px 7px 7px;
+  background: var(--c-led-panel); border-radius: 5px; box-shadow: inset 0 0 0 1.5px #2A3035;
+  color: var(--c-led); font-weight: var(--w-led); font-size: var(--fs-small); line-height: 1; letter-spacing: .02em;
+}
+.rc-fl svg { width: 9px; height: 9px; fill: currentColor; opacity: .8; }
+.rc-fl .rc-mat { display: block; width: 20px; height: 5px; margin-top: 3px; background: var(--c-soft); border-radius: 1px; }
+.rc-t { grid-area: t; font-size: var(--fs-ui); font-weight: 720; line-height: 1.4; }
+.rc-v { grid-area: v; display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; font-size: var(--fs-small); line-height: 1.5; color: var(--c-ink-2); }
+.rc-arrow { flex: none; width: 20px; height: 10px; color: var(--c-ink-3); }
+.recap-cell[data-state="done"] .rc-from { color: var(--c-kung-ink); font-weight: 760; }
+.recap-cell[data-state="done"] .rc-to { color: var(--c-ink); font-weight: var(--w-ui); }
+.recap-cell[data-recap="mat"][data-state="done"] .rc-to { color: var(--c-soft-ink); font-weight: 800; }
+.rc-todo { grid-area: v; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-size: var(--fs-small); line-height: 1.5; color: var(--c-ink-2); }
+.rc-todo .btn { text-decoration: none; }
+.rc-todo .btn svg { width: 12px; height: 12px; }
+.recap-cell[data-recap="mat"][data-state="empty"] .rc-v, .recap-cell[data-state="done"] .rc-todo { display: none; }
+/* v0.7 F3-2·9(contest 4): 값이 있으면 값 줄을 한 단 크게(14 회색 → 17 먹), ③은 둘째 줄 '{r}% 덜 울림'을 크게(완충 청록).
+   빈 상태(규칙만)는 지금처럼 작은 회색 — 아직 재지 않은 것이 잰 것보다 커 보이지 않게 */
+.recap-cell[data-state="done"] .rc-v { font-size: 17px; color: var(--c-ink); }
+@media (min-width: 901px) { .recap-cell[data-recap="mat"] { grid-template-areas: "fl t" "fl v" "fl p"; } }   /* 좁은 폭은 subgrid 행 3(아래) */
+.rc-pct { grid-area: p; margin-top: 2px; font-size: 19px; font-weight: 720; line-height: 1.15; color: var(--c-soft-ink); text-wrap: balance; }   /* v1.0e N12: 줄이 모자라면 '쿵 지수 / 44% 감소'로(932에서 '감소'만 홀로 넘어갔다) */
+.rc-pct b { font-size: 32px; font-weight: 820; letter-spacing: -.01em; margin-right: 1px; }
+.recap-cell:not([data-state="done"]) .rc-pct, .rc-pct:has(> b:empty) { display: none; }
+
+/* v0.5 E3 S6-15 '할 수 있는 한 가지': 엘리베이터 벽의 안내 스티커 두 장, 같은 크기·같은 무게(어느 쪽도 정답처럼 크게 하지 않는다) */
+.next { grid-area: next; margin-top: 32px; }
+.next-h { font-size: 13px; font-weight: 720; color: var(--c-ink-2); letter-spacing: .01em; margin-bottom: 10px; }
+.next-cells { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.next-cell { padding: 12px 16px 14px; background: transparent; border: 1px solid var(--c-ink-3); border-radius: 4px; font-size: var(--fs-ui); line-height: 1.55; }
+.next-cell .nk { margin-bottom: 4px; font-size: var(--fs-small); font-weight: 720; color: var(--c-ink-2); }
+.next .tel { font-weight: 800; white-space: nowrap; color: var(--c-ink); text-decoration: underline; text-underline-offset: 3px; }
+/* v0.7 F3-6: 스티커 아래 닫힌 펼침 하나(JS 0). 여닫이 표시는 + / − 상자(글리프 아님), 누를 자리 40px. 펼친 글은 해요체 도움말 15 */
+.how { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--c-guide); }
+/* v0.8(story 0절 · 27여 '상담 번호를 어떤 상황에서'): 닫힌 펼침이 글 링크처럼 보여 지나쳤다 → 테두리 있는 작은 보조 버튼 모양(채운 버튼 아님,
+   주 행동 하나 원칙 유지). 열리면 테두리가 먹색 */
+.how summary {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 6px 12px 7px 9px; cursor: pointer; list-style: none;
+  border: 1.5px solid var(--c-ink-3); border-radius: 4px; background: var(--c-paper);
+  font-size: var(--fs-small); font-weight: 720; color: var(--c-ink);
+}
+.how[open] summary { border-color: var(--c-ink); }
+@media (hover: hover) and (pointer: fine) { .how summary:hover { background: color-mix(in srgb, var(--c-ink) 7%, var(--c-paper)); } }
+.how summary::-webkit-details-marker { display: none; }
+.how summary::before {
+  content: ""; flex: none; width: 16px; height: 16px; border: 1.5px solid currentColor; border-radius: 3px;
+  background: linear-gradient(currentColor, currentColor) center / 8px 1.5px no-repeat, linear-gradient(currentColor, currentColor) center / 1.5px 8px no-repeat;
+}
+.how[open] summary::before { background: linear-gradient(currentColor, currentColor) center / 8px 1.5px no-repeat; }
+.how-body { display: grid; gap: 10px; margin: 4px 0 4px; max-width: 48ch; font-size: var(--fs-ui); line-height: 1.65; color: var(--c-ink); }
+/* 쪽지 예시: 문에 붙인 메모 한 장(흰 종이 + 위 테이프 한 조각). 이 칸에서 유일한 장식 — 쪽지라는 물건을 알아보게 */
+.slip { position: relative; margin: 8px 0 2px; padding: 16px 16px 15px; background: var(--c-ceramic); border: 1px solid var(--c-guide); border-radius: 2px; box-shadow: 3px 3px 0 var(--c-guide); }
+.slip::before { content: ""; position: absolute; top: -6px; left: 50%; width: 54px; height: 12px; translate: -50% 0; rotate: -2deg; background: color-mix(in srgb, var(--c-lamp) 60%, transparent); }
+.how-steps { margin: -4px 0 0; padding-left: 1.4em; display: grid; gap: 4px; }
+.how-steps li::marker { font-weight: 760; color: var(--c-ink-2); }
+.how-src { font-size: var(--fs-small); line-height: 1.55; color: var(--c-ink-2); }
+.how-src cite { font-style: normal; }
+
+/* 카드 1080×1350 (도면 한 장: 이중 테두리 + 표제란) */
+.card { width: 1080px; height: 1350px; overflow: hidden; background: var(--c-paper); color: var(--c-ink); font-family: var(--font); }
+.card .frame-o { position: absolute; inset: 36px; border: 3px solid var(--c-ink); }
+.card .frame-i { position: absolute; inset: 50px; border: 1px solid var(--c-ink); }
+.card .mini { position: absolute; left: 100px; top: 540px; width: 880px; height: 500px; }
+.card .mini svg { width: 880px; height: 500px; display: block; outline: 1.5px solid var(--c-ink-3); }
+.card .panel-led { position: absolute; left: 100px; top: 120px; width: 440px; height: 330px; background: var(--c-led-panel); border-radius: 14px; padding: 28px 34px; box-shadow: inset 0 0 0 5px #2A3035; }
+.card .lbl { display: block; font-size: 30px; font-weight: 620; color: #C9B2A8; margin-bottom: 14px; letter-spacing: .02em; }
+.card .num {
+  --p: 9px; display: inline-block; font-weight: 800; font-size: 190px; line-height: 1; color: var(--c-led); letter-spacing: .01em;
+  white-space: nowrap; overflow-wrap: normal; word-break: keep-all;   /* v0.2 #4: "100"이 "10"/"0"으로 갈라지지 않게 */
+  background: radial-gradient(circle, var(--c-led-off) 0 2.6px, transparent 3.3px) 0 0 / var(--p) var(--p);
+  -webkit-mask-image: radial-gradient(circle, #000 0 calc(var(--p) * .36), transparent calc(var(--p) * .46));
+          mask-image: radial-gradient(circle, #000 0 calc(var(--p) * .36), transparent calc(var(--p) * .46));
+  -webkit-mask-size: var(--p) var(--p); mask-size: var(--p) var(--p);
+  filter: drop-shadow(0 0 7px rgba(255, 90, 44, .6));
+}
+.card .num.is-3 { --p: 7.5px; font-size: 150px; padding: 18px 0 0; }   /* 세 자리(100~999) */
+.card .num.is-pct { --p: 7px; font-size: 124px; padding: 24px 0; }
+.card .side-t { position: absolute; left: 580px; top: 128px; width: 400px; }
+.card .type { font-size: 74px; font-weight: 820; line-height: 1.08; letter-spacing: -0.025em; }
+.card .quip { margin-top: 22px; font-size: 31px; font-weight: 420; line-height: 1.5; }
+.card .close { position: absolute; left: 100px; top: 1092px; font-size: 44px; font-weight: 720; letter-spacing: -0.01em; }
+/* v0.3 카드 v2: 보조 줄 S6-10(LED 판 바로 아래, 숫자 색 = S5 막대 색)과 센서 배지 S6-09(핵심 문장 오른쪽 도장) */
+.card .matline { position: absolute; left: 100px; top: 462px; font-size: 28px; font-weight: 520; line-height: 1.2; white-space: nowrap; }
+.card .matline b { font-weight: 800; }
+.card .badge {
+  position: absolute; right: 100px; top: 1096px; height: 44px; display: flex; align-items: center; gap: 12px; padding: 0 22px 0 18px;
+  border: 2.5px solid var(--c-soft-ink); border-radius: 22px; color: var(--c-soft-ink); font-size: 22px; font-weight: 700;
+}
+.card .badge svg { width: 14px; height: 22px; }
+.card .tb { position: absolute; left: 50px; right: 50px; bottom: 50px; height: 118px; display: grid; grid-template-columns: 1.7fr 1.3fr .6fr 1.8fr; border-top: 1px solid var(--c-ink); }   /* v0.3.1: 기록 칸을 넓힘(PNG와 같은 비율) */
+/* 기록 칸: 엔진 글은 읽기용으로 두고, 보이는 글은 card.js가 맞춘다("쿵 13번"을 먼저 보장, 뒤 항목은 줄이거나 뺀다 — 말줄임 없음) */
+.card .tb b[data-result-detail].is-fitted { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.card .tb b.fit { overflow: hidden; }
+.card .tb > div { padding: 18px 22px 0; border-left: 1px solid var(--c-ink); }
+.card .tb > div:first-child { border-left: 0; padding-left: 50px; }
+.card .tb span.k { display: block; font-size: 19px; color: var(--c-ink-2); font-weight: 420; }
+.card .tb b { display: block; margin-top: 6px; font-size: 30px; font-weight: 720; white-space: nowrap; }
+.card .tb b.url { font-size: 22px; font-weight: 500; color: var(--c-ink-2); margin-top: 12px; overflow: hidden; text-overflow: ellipsis; }   /* 길면 card.js가 글자를 줄이고, 그래도 길면 말줄임 */
+
+/* ── S7 바닥글: 로비 게시판처럼 한 단 ── */
+.scene-foot { border-top: var(--lw-cut) solid var(--c-ink); background: var(--c-paper-2); }
+/* v0.6 F2(R11 5·6): 바닥글도 다른 장면과 같은 왼쪽 선(벽 안 +26)에서 시작한다(가운데 단이던 것). 읽는 폭은 760 그대로. 제목 줄간격 1.14 */
+.foot { margin: 0; padding: 72px var(--margin) 72px calc(var(--margin) + 26px); font-size: var(--fs-small); line-height: 1.7; }
+.foot > * { max-width: 760px; }
+.foot h2 { font-size: var(--fs-h3); font-weight: var(--w-h2); line-height: 1.14; margin-bottom: 20px; }
+.foot h3 { font-size: var(--fs-ui); font-weight: var(--w-ui); line-height: 1.3; margin: 28px 0 8px; }
+/* [물리엔진 보기](arch가 붙이는 버튼·캔버스)는 크레딧 '물리엔진·장면 엔진' 바로 아래 */
+.engine-slot:empty { display: none; }
+.engine-slot { margin-top: 12px; display: grid; gap: 10px; justify-items: start; }
+/* G1 맨 끝 한 문장(S7-08): 위에 슬래브 단면 한 줄(먹 자른선 + 콘크리트 + 가는 선) = 건물 맨 아래층의 바닥, 그 아래에서 읽는다.
+   크기는 작은 제목 단(--fs-h2s). 바닥글 통계와 한 덩어리로 보이지 않게 띄운다 */
+.coda { position: relative; margin: 0; padding: 64px var(--margin) 0 calc(var(--margin) + 26px); font-weight: var(--w-h2); font-size: var(--fs-h2s); line-height: 1.14; letter-spacing: -0.015em; text-wrap: balance; }
+/* v0.7 F3-9(S7-09·10, footer.design 원리): 맺음 문장 바로 아래 행동 한 줄(글 링크 셋 — 채운 버튼 없음, 사이는 가는 세로선) +
+   상태 한 줄(만든 방식의 검증된 값, 작은 회색). 맺음 문장과 같은 왼쪽 선 */
+.coda-end { display: grid; gap: 10px; justify-items: start; padding: 20px var(--margin) 104px calc(var(--margin) + 26px); }
+.coda-acts { display: flex; flex-wrap: wrap; align-items: center; row-gap: 2px; font-size: var(--fs-ui); font-weight: var(--w-ui); }
+/* 카드 저장은 이동이 아니라 동작이라 글 모양 버튼(.link-btn) — 보이는 모양은 옆 링크와 같다 */
+.link-btn { padding: 0; border: 0; background: none; font: inherit; cursor: pointer; }
+.coda-acts a, .link-btn {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 44px; color: var(--c-ink);
+  text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px;
+}
+.coda-acts > * + * { margin-left: 14px; padding-left: 14px; border-left: 1px solid var(--c-ink-3); }   /* 테두리 초기화(.link-btn)보다 뒤 */
+.coda-acts svg { width: 12px; height: 12px; flex: none; }
+.link-btn[hidden] { display: none; }   /* S6 버튼과 같은 숨김(엔진) */
+.coda-status { font-size: var(--fs-small); line-height: 1.5; color: var(--c-ink-2); font-variant-numeric: tabular-nums; }
+.coda::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 18px; border-top: var(--lw-cut) solid var(--c-ink); border-bottom: var(--lw-thin) solid var(--c-ink);
+  background: repeating-linear-gradient(135deg, transparent 0 7px, var(--c-aggregate) 7px 8px), var(--c-concrete); }
+.foot .facts { padding: 0; list-style: none; display: grid; gap: 12px; }
+.foot .facts li { padding-left: 14px; border-left: 2px solid var(--c-ink-3); }
+.foot cite { font-style: normal; color: var(--c-ink-2); }
+.foot .block { margin-top: 20px; }
+.foot small { display: block; margin-top: 6px; color: var(--c-ink-2); font-size: var(--fs-annot); }
+.foot .help { margin-top: 24px; padding: 16px 18px; background: var(--c-paper); border: 1.5px solid var(--c-ink); }
+.foot .help p + p { margin-top: 6px; }
+.foot dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; margin-top: 8px; }
+.foot dt { color: var(--c-ink-2); }
+.foot ul.src { padding-left: 18px; }
+.foot details { margin-top: 16px; }
+.foot details pre { white-space: pre-wrap; font-family: inherit; font-size: var(--fs-annot); color: var(--c-ink-2); }
+/* v1.0 N3(judge): 넓은 화면 S7 도착 화면에 [물리엔진 보기]가 들어오게(1280에서 아래로 23px 밀려 있었다).
+   위 여백(머리띠 밑)은 그대로, 단 폭을 조금 넓혀 줄바꿈을 줄이고 덩어리 사이만 좁힌다 */
+@media (min-width: 1200px) {
+  .foot > * { max-width: 840px; }
+  .foot .facts { gap: 8px; }
+  .foot .block { margin-top: 14px; }
+  .foot .help { margin-top: 18px; padding: 12px 16px; }
+  .foot h3 { margin-top: 22px; }
+}
+
+/* ── 모바일 ── */
+@media (max-width: 720px) {
+  .hud { padding: 0 calc(var(--margin) - 6px); }
+  .hud .brand { display: none; }
+  .hud-right { width: 100%; justify-content: space-between; }
+  [data-place="s2-copy"] .h2, [data-place="s3-key"] { font-size: 28px; }
+  .callout { padding: 16px 16px 18px; box-shadow: 4px 4px 0 var(--c-guide); }
+  .callout .display { font-size: 40px; }   /* v0.6 F2: 절정 > 장면 제목(28) */
+  .callout .s406 { font-size: var(--fs-ui); }
+  .callout-return .h2 { font-size: var(--fs-h3); }
+  .flip-layer .block { font-size: 17px; }
+  .controls .hint { display: none; }   /* S4-04는 데스크톱 힌트(카피 덱) */
+  .end { padding: calc(var(--hud-h) + 20px) calc(var(--margin) + 8px) 48px; }   /* v0.6 F2(R11 5): 왼쪽 선 = 다른 장면(M + 8) */
+  .recap { margin-top: 10px; padding: 14px 14px 12px; }
+  .next { margin-top: 6px; }
+  .end > .vote { margin-top: 10px; }
+  .missed { padding: 8px 8px 8px 12px; gap: 6px 10px; font-size: var(--fs-small); }
+  .end .title { font-size: var(--fs-h3); padding-top: 0; }
+  .end .side { padding-top: 0; }
+  .board { padding: 10px; }
+  .actions .btn-lift { flex: 1 1 auto; justify-content: center; }
+  .foot { padding: 56px calc(var(--margin) + 8px) 64px; }
+  .coda { padding: 48px var(--margin) 0 calc(var(--margin) + 8px); font-size: clamp(30px, 8.4vw, 34px); }   /* v0.7 F3-9: 24 → 32 안팎(320 30 · 390 32.8, 두 줄) */
+  .coda-end { padding: 16px var(--margin) 88px calc(var(--margin) + 8px); }
+  .coda-acts > * + * { margin-left: 12px; padding-left: 12px; }
+  /* v0.7 F3-7: 휴대폰은 [카드 저장]이 폭 꽉(주), [공유하기]는 그 아래 한 줄(보조) */
+  .end .actions .btn-lift { flex: 1 1 100%; }
+  .end .actions .btn-save { min-height: 56px; }
+  #s6[data-result-state="empty"] .end .actions .btn-save { min-height: 47px; }
+  .rc-pct b { font-size: 28px; }
+  /* v0.3 */
+  .sensor { padding: 12px 14px 13px 10px; gap: 10px; }
+  .sensor-title { font-size: 17px; }
+  #s5 [data-place="s5-head"] .h2 { font-size: 28px; }   /* v0.6 F2(R11 2·3): 휴대폰 장면 제목 28 하나 */
+  .mat-result .cue { font-size: var(--fs-ui); }
+  .mat-result .s507 { font-size: var(--fs-annot); }
+  .mat-lamp { font-size: var(--fs-small); }
+  .mat-key { font-size: 26px; white-space: normal; }   /* 결론이 장면 제목보다 작아 보이지 않게(22 → 26, 한 줄 폭 안) */
+}
+@media (max-width: 420px) { .next-cells { grid-template-columns: minmax(0, 1fr); } }
+/* v0.5 S6 한 단(휴대폰·태블릿 세로 — 폭 900 이하이고 낮은 화면이 아닐 때). 768×1024는 카드 500px 옆 오른쪽 단이 한 글자 폭으로 눌렸다.
+   읽는 순서 = DOM 순서(제목 → 카드 → E1·버튼 → 절정 띠 → E2 → E3 → 투표). flex라 숨은 칸(E1·띠)은 간격도 남기지 않는다.
+   절정 띠(S6-11): 화면 아래에 떠 있으면 E1 안내·E2 안내판을 덮었고(320 도착, QA v0.5 390 겹침), 버튼 줄 아래 흐름에 두면 S6에 바로
+   도착할 때 E2·E3가 100px 밀렸다(contest v0.5 M1) → contest 안 ③: DOM 순서대로 E3 다음·투표 앞(흐름 안). 엔진이 S6 활성 때 열어도
+   그 위 내용(E1·버튼·E2·E3)은 움직이지 않는다. 돌아가기 행동 우선순위 E1 > 띠 > ③(contest M2)과도 맞는다 */
+@media (max-width: 720px), (max-width: 900px) and (min-height: 560px) {
+  .end { display: flex; flex-direction: column; gap: 22px; }
+  .end .title { padding-top: 0; }
+  .end .board { align-self: flex-start; }
+  .end .side { padding-top: 0; }
+  .end > .missed { position: static; align-self: stretch; justify-content: flex-start; max-width: none; margin: 0; }
+}
+/* v0.5 E5(QA v0.5 320): 뒤집힌 6층 의자가 듣기 설명 상자 아래쪽에 가렸다(의자 위 262, 상자 아래 296) → 아주 좁은 화면은 상자를 한 단계 낮춘다 */
+@media (max-width: 359px) {
+  .callout { padding: 12px 14px 14px; }
+  .callout .display { font-size: 28px; }
+  .callout .s406 { margin-top: 6px; font-size: 13px; line-height: 1.45; }
+  .callout .btn { margin-top: 10px; min-height: 40px; padding: 9px 14px 10px; font-size: var(--fs-small); }   /* v0.6 F2(R11 7): 작은 버튼 40 */
+  /* v0.6 F2(R11 2): 아주 좁은 화면의 장면 제목 24 하나(S2·S3·S5 같게) */
+  [data-place="s2-copy"] .h2, [data-place="s3-key"], #s5 [data-place="s5-head"] .h2 { font-size: var(--fs-h3); }
+}
+/* v0.5(contest M2): 기록 0으로 도착했을 때 화면 카드의 큰 '0'은 꺼진 LED 색(머리띠 꺼진 층과 같은 #8D6250, 판 위 3.3:1 — 큰 글 기준 3:1)으로.
+   숫자는 정직하게 그대로 두고 빛만 끈다 → 눈의 중심이 E1 안내·[7층으로]로 간다. 공유 PNG(canvas)는 영향 없음 */
+#s6[data-result-state="empty"]:not([data-result-empty="mat"]) .card .num { color: #8D6250; filter: none; }   /* v0.6(story R8-3): 숫자가 0일 때만 */
+/* v0.6 F2(story R8-3): 기록 0 안에서 매트 시험만 한 사람은 S6-13m 한 문장만 */
+.end-empty .e1-mat, #s6[data-result-empty="mat"] .end-empty .e1-none { display: none; }
+#s6[data-result-empty="mat"] .end-empty .e1-mat { display: block; }
+/* v0.5 E2 좁은 폭(휴대폰·844×390·태블릿 세로): 세로 세 줄. 칸을 부모 격자에 맞춰(subgrid) 값 줄의 '무엇 | → | 어디'가 세 줄 모두 같은 열에 선다 */
+@media (max-width: 900px) {
+  .recap-list { grid-template-columns: auto auto auto minmax(0, 1fr); column-gap: 8px; }
+  .recap-cell { grid-column: 1 / -1; grid-template-columns: subgrid; grid-template-areas: none; padding: 12px 0 10px 4px; border-left: 0; border-top: 1px solid var(--c-guide); }
+  .recap-cell:first-child { padding-left: 4px; border-top: 0; }
+  .rc-fl { grid-column: 1; grid-row: 1 / span 2; margin-right: 4px; }
+  .rc-t { grid-column: 2 / -1; grid-row: 1; }
+  /* 값 줄 자체도 부모 열을 물려받는다(중첩 subgrid). display: contents는 상자가 없어 '보이지 않음'으로 읽혔다(QA checkVisibility) */
+  .rc-v { grid-column: 2 / -1; grid-row: 2; display: grid; grid-template-columns: subgrid; align-items: center; }
+  .rc-v > * { font-size: var(--fs-small); line-height: 1.5; }
+  .recap-cell[data-state="done"] .rc-v > * { font-size: 16px; }   /* v0.7 F3: 값이 있으면 한 단 크게 */
+  .rc-pct { grid-column: 2 / -1; grid-row: 3; }
+  .rc-todo { grid-column: 2 / -1; grid-row: 2; }
+}
+.end-empty .btn, .rc-todo .btn, .missed .btn { white-space: nowrap; }
+/* 머리띠가 좁으면 토글은 아이콘만(이름은 그대로 읽힘). 폭이 고정이라 문구가 바뀌어도 밀리지 않는다 */
+@media (max-width: 560px) {
+  #motion-pause .tg-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  #motion-pause { width: 40px; padding: 0; }
+  .toggles { gap: 6px; }
+}
+/* v0.8: 소리 토글 아이콘만은 420 이하로 넓혔다(379 이하이던 것) — 390에서 U-02b 칸 자리 */
+@media (max-width: 420px) {
+  .toggle-sound .tg-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .toggle-sound { width: 40px; padding: 0; }
+}
+/* v0.8 U-02b 휴대폰: '지금'을 빼고 엘리베이터 표시판처럼 두 줄(층 / 위층·아래층), 15px. 폭 약 60 */
+@media (max-width: 480px) {
+  .hud-right { gap: 8px; }
+  .lift-now { min-height: 37px; padding: 2px 7px; font-size: 15px; line-height: 1.1; }
+  .lift-now .ln-now, .lift-now .ln-sep { display: none; }
+  .lift-now .ln-txt, .lift-now .ln-ghost { display: grid; justify-items: center; }
+}
+/* 아주 좁은 화면(320~360): 엘리베이터 칸 여백을 줄이고 이동 화살표 자리를 뺀다(층 칸·U-02b·토글 둘이 한 줄에 들어가게) */
+@media (max-width: 360px) {
+  .hud-right { gap: 6px; }
+  .lift { padding: 5px 4px; }
+  .lift .cell { padding: 3px 3px; }
+  .lift .lift-arrow { display: none; }
+}
+/* 짧은 휴대폰(320×568 등): 띠 설명이 맨 아래 자리를 쓴다. 버튼 줄을 조금 낮춘다 */
+@media (max-width: 720px) and (max-height: 699px) and (min-height: 560px) {
+  [data-cue="s0-band"]:not([hidden]) ~ .scroll-hint,
+  html[data-preview="impact"] [data-cue="s0-band"] ~ .scroll-hint { display: none; }
+  .band-ruler { line-height: 1.3; }   /* v1.0 K1: 정의 줄로 세 줄 — 2행 제목의 글 상자(글꼴 높이, 요소 상자보다 8px 아래) 밑에 들어가게(stage.js 아래 끝 6) */
+  .keys { gap: 6px 8px; }
+  .keys .btn-sm, .steps .btn-sm { min-height: 36px; padding: 7px 11px 8px; }
+  .steps { gap: 6px; }
+  #s5 [data-place="s5-head"] .h2 { font-size: var(--fs-h3); }   /* v0.6 F2: 짧은 휴대폰 장면 제목 24 하나 */
+  #s5 [data-place="s5-head"] .lead { font-size: 13px; margin-top: 6px; }
+  .mat-key { font-size: 22px; white-space: normal; }
+  .mat-result .cue { font-size: var(--fs-small); }
+  .mat-result .s507 { font-size: var(--fs-annot); margin-top: 4px; }   /* v0.7 F3-10: 사실 고지도 12 아래로 내리지 않는다(11이던 것) */
+}
+/* '방금 그 쿵'(두 줄)이 안내 문장 자리를 이어받는 화면(짧은 휴대폰·좁은 가로): stage.js가 .after-replaces-intro를 붙인다 */
+.copy.after-replaces-intro:has(> [data-cue="s0-after"]:not([hidden])) > [data-place="s0-intro"],
+html[data-preview="impact"] .copy.after-replaces-intro > [data-place="s0-intro"] { visibility: hidden; }
+
+/* ── 낮은 뷰포트(가로모드 휴대폰 844×390 등). ui/stage.js의 isShort(H < 560)와 같은 기준 ── */
+@media (max-height: 559px) {
+  :root { --hud-h: 48px; --fs-display: 40px; --fs-lead: 16px; --fs-body: 15px; }
+  .hud { background: var(--c-paper); }   /* 6절: 가로모드·200% 확대에서 뒤집힌 무대가 머리띠 너머로 비치지 않게 */
+  .m-only { display: none; }             /* 낮은 화면은 폭이 넓으므로 S0-02를 두 줄로 */
+  .lift .dots { font-size: 19px; }   /* v0.3.5: 큰 글(굵은 18.66px 이상) 유지 → 꺼진 층 대비 기준 3:1 */
+  .toggle { min-height: 32px; padding: 6px 11px 6px 9px; }
+  .lift-now { min-height: 32px; font-size: 15px; }   /* v0.8 U-02b: 낮은 머리띠(48) */
+  .btn { min-height: 40px; padding: 10px 16px 11px; }
+  #s6 .end .actions .btn { min-height: 44px; }   /* v1.0 N6(judge): S6 주 행동 줄은 낮은 화면에서도 손가락 크기 44 */
+  #s6 .end-empty .btn, #vote-link { min-height: 44px; }   /* v1.0e: 844 [집으로] 36 · 투표 링크 41 → 44 */
+  .btn-sm { min-height: 36px; padding: 8px 12px 9px; }
+  .display.is-wrapped { white-space: nowrap; width: auto; }
+  .h2, [data-place="s2-copy"] .h2, [data-place="s3-key"] { font-size: 26px; max-width: none; }
+  [data-place="s2-copy"] .h2 { margin-top: 4px; }
+  [data-place="s2-copy"] .actions { margin-top: 12px; }
+  [data-place="s2-copy"] .u06 { margin-top: 8px; }
+  [data-place="s2-copy"] .cue { margin-top: 6px; font-size: var(--fs-ui); }
+  [data-place="s3-top"] .actions { margin-top: 8px; }
+  .u06 { font-size: 13px; }   /* v0.7 F3-10: 11 → 13(쿵 지수의 뜻) */
+  .band-note { width: 220px; }
+  .callout { padding: 10px 14px 12px; box-shadow: 4px 4px 0 var(--c-guide); }
+  .callout .display { font-size: 30px; }   /* v0.6 F2: 절정 > 장면 제목(26) */
+  .callout .s406 { margin-top: 4px; font-size: 13px; max-width: none; }
+  .callout .btn { margin-top: 8px; }
+  .callout-return .lead { font-size: 13px; }
+  .callout-return .h2 { margin-top: 4px; font-size: 20px; }
+  .controls .hint { display: none; }
+  .end { padding-top: calc(var(--hud-h) + 20px); }
+  .end .title { font-size: var(--fs-h3); padding-top: 0; }
+  /* v0.3 */
+  .d-only { display: none; }
+  .steps.is-row .btn-sm { font-size: 13px; min-height: 36px; padding: 7px 10px 8px 8px; }   /* v0.6 F2(R11 7): 압축 단 36 하나 */
+  .step::before { width: 18px; height: 18px; font-size: var(--fs-annot); }   /* v0.7 F3-10: 11 → 12 */
+  #s5 [data-place="s5-head"] .h2 { font-size: 22px; }
+  [data-place="s5-head"] .lead { margin-top: 2px; font-size: var(--fs-ui); }
+  .mat-key { font-size: 20px; }
+  .mat-result .cue { font-size: var(--fs-small); }
+  .mat-result .s507 { font-size: var(--fs-annot); margin-top: 3px; }   /* v0.7 F3-10: 11 → 12 */
+  .mat-lamp { font-size: 13px; }
+  .sensor { padding: 10px 12px; gap: 10px; }
+  .sensor-phone { width: 34px; height: 38px; }
+  .sensor-title { font-size: 16px; }
+  .sensor-actions { margin-top: 6px; }
+  .sensor-fine { margin-top: 4px; }
+  .s1-h { font-size: 20px; }
+}
+
+/* ── 움직임 줄이기·일시정지(다른 경로 — DESIGN 7절): 줄이기는 엔진이 회전을 크로스페이드·정지 프레임으로 바꾸고 여기서는 움직임을 끈다.
+   일시정지는 엔진이 무대를 그 각도에 잠그고 여기서는 진행 중인 움직임을 그 프레임에 세운다(글을 숨기는 드러남은 규칙 쪽에서 뺀다) ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+}
+html[data-motion-paused] *, html[data-motion-paused] *::before, html[data-motion-paused] *::after { animation-play-state: paused !important; transition: none !important; }
+
+/* 시각 점검용 미리보기(?scene=… · ?preview=…)에서만 */
+html[data-only] main > section:not(.is-only) { display: none; }
+html[data-only] .scene { min-height: 100svh; }
+html[data-preview] [data-action][hidden] { display: inline-flex !important; }
+html[data-preview] .toggle[hidden] { visibility: visible; }
+html[data-preview="impact"] :is([data-cue="s0-after"], [data-cue="s0-band"], [data-cue="s2-after"], [data-cue="s2-06"])[hidden] { display: block !important; }
+html[data-preview="impact"] .react[hidden] { display: block !important; }
+html[data-preview="flipped"] .flip-layer { transform: rotate(180deg); }
+html[data-preview="flipped"] .flip-layer [data-building-upright] { transform: rotate(180deg); }

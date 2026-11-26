@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HTML 카드 물리 데모</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; color: #18232b; background: #fafaf9; font: 1rem/1.55 system-ui, sans-serif; }
+  main { max-width: 54rem; margin: auto; padding: clamp(.75rem, 4vw, 2rem); }
+  h1 { line-height: 1.15; }
+  button { min-height: 2.75rem; padding: .35rem .75rem; color: inherit; background: white; border: 1px solid #485867; border-radius: .35rem; font: inherit; cursor: pointer; }
+  button:focus-visible { outline: 3px solid #075d90; outline-offset: 3px; }
+  .controls { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; }
+  .controls[hidden] { display: none; }
+  #status:empty { display: none; }
+  .scene { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(9rem, 100%), 1fr)); gap: .75rem; padding: .75rem; border: 1px solid #687783; background: #e8edf0; }
+  .scene.physical { display: block; position: relative; height: clamp(22rem, 58svh, 34rem); padding: 0; overflow: hidden; }
+  .card { inline-size: min(9rem, 100%); background: #fff; border: 1px solid #526b7e; display: flex; align-items: center; justify-content: space-between; gap: .35rem; padding: .5rem; }
+  .physical .card { position: absolute; top: 0; left: 0; }
+  .scene:not(.physical) .card { transform: none !important; }
+  .card strong { font-size: 1.2rem; }
+  .grip { display: none; inline-size: 2.75rem; flex: 0 0 auto; padding: 0; touch-action: none; user-select: none; cursor: grab; }
+  .physical .grip { display: inline-block; }
+  .card:focus-within { z-index: 1; }
+</style>
+</head>
+<body>
+<main>
+  <h1>떨어지는 HTML 카드</h1>
+  <p id="instructions" hidden>손잡이를 끌어 던지세요. 손잡이에 키보드 초점을 두고 Enter를 눌러도 던질 수 있습니다. 카드의 글자는 선택할 수 있습니다.</p>
+  <div class="controls" id="controls" hidden>
+    <button type="button" id="reset">다시 떨어뜨리기</button>
+    <button type="button" id="tilt" aria-pressed="false">기울기 중력</button>
+    <span id="status" role="status"></span>
+  </div>
+  <noscript><p>스크립트가 꺼져 있어 카드를 고정 배치로 표시합니다.</p></noscript>
+  <p id="still" hidden>움직임 줄이기 설정에 따라 카드를 고정 배치로 표시합니다.</p>
+  <section class="scene" id="scene" aria-label="물리 카드">
+    <article class="card"><strong>가</strong><button type="button" class="grip" aria-label="가 카드 던지기">⠿</button></article>
+    <article class="card"><strong>나</strong><button type="button" class="grip" aria-label="나 카드 던지기">⠿</button></article>
+    <article class="card"><strong>다</strong><button type="button" class="grip" aria-label="다 카드 던지기">⠿</button></article>
+    <article class="card"><strong>기억</strong><button type="button" class="grip" aria-label="기억 카드 던지기">⠿</button></article>
+    <article class="card"><strong>여백</strong><button type="button" class="grip" aria-label="여백 카드 던지기">⠿</button></article>
+    <article class="card"><strong>한 줄</strong><button type="button" class="grip" aria-label="한 줄 카드 던지기">⠿</button></article>
+  </section>
+</main>
+<script type="module">
+  import { World, bindDOM, contain, dragPointer, fixedLoop, tiltGravity } from './engine.js';
+
+  const scene = document.querySelector('#scene');
+  const controls = document.querySelector('#controls');
+  const still = document.querySelector('#still');
+  const tiltButton = document.querySelector('#tilt');
+  const status = document.querySelector('#status');
+  const world = new World({gy:880,iterations:12});
+  const tilt = tiltGravity(world, {strength:880});
+  const cards = new Map();
+  let disconnectDrag;
+  let tiltOn = false;
+
+  scene.classList.add('physical');
+  for (const card of scene.querySelectorAll('.card')) {
+    const bounds = card.getBoundingClientRect();
+    const grip = card.querySelector('.grip');
+    const body = world.add({
+      width:bounds.width,height:bounds.height,friction:0.75,restitution:0.28
+    });
+    cards.set(grip, {body,binding:bindDOM(body,card)});
+    grip.addEventListener('click', event => {
+      if (event.detail === 0) world.kick(body,body.x < scene.clientWidth/2 ? 85 : -85,-420,2);
+    });
+  }
+
+  function render(alpha) {
+    for (const {binding} of cards.values()) binding.render(alpha);
+  }
+
+  function stopTilt() {
+    tilt.stop();
+    tiltOn = false;
+    tiltButton.setAttribute('aria-pressed','false');
+    status.textContent = '';
+  }
+
+  function reset() {
+    const width = scene.clientWidth;
+    const columns = Math.min(cards.size,Math.max(1,Math.floor(width/144)));
+    const rows = Math.ceil(cards.size/columns);
+    const gap = Math.min(72,(scene.clientHeight-92)/Math.max(1,rows-1));
+    let index = 0;
+    for (const {body} of cards.values()) {
+      const x = width*(index%columns+0.5)/columns;
+      const y = 47+gap*Math.floor(index/columns);
+      body.vx = body.vy = body.spin = 0;
+      world.move(body,x,y,(index%2 ? 1 : -1)*(0.04+index*0.022));
+      index++;
+    }
+    render(1);
+  }
+
+  document.querySelector('#reset').addEventListener('click',reset);
+  tiltButton.addEventListener('click',async () => {
+    if (tiltOn) { stopTilt(); return; }
+    tiltButton.disabled = true;
+    const result = await tilt.start();
+    tiltButton.disabled = false;
+    tiltOn = result === 'enabled';
+    tiltButton.setAttribute('aria-pressed',String(tiltOn));
+    status.textContent = ({
+      enabled:'기울기 입력을 켰습니다.',
+      denied:'기울기 센서 권한이 필요합니다.',
+      unavailable:'이 환경에서는 기울기 입력을 사용할 수 없습니다.'
+    })[result] ?? '';
+  });
+
+  contain(world,scene,() => render(1));
+  fixedLoop(world,scene,render,{ onReduced(reduced) {
+    scene.classList.toggle('physical',!reduced);
+    controls.hidden = reduced;
+    document.querySelector('#instructions').hidden = reduced;
+    still.hidden = !reduced;
+    if (reduced) {
+      disconnectDrag?.();
+      disconnectDrag = undefined;
+      stopTilt();
+    } else {
+      reset();
+      disconnectDrag = dragPointer(world,scene,{pick:e => cards.get(e.target.closest('.grip'))?.body});
+    }
+  }});
+</script>
+</body>
+</html>

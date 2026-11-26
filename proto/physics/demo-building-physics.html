@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>중력을 뒤집으면 · 3층 물리 데모</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #f9f7f0; color: #25373b; font: 1rem/1.55 system-ui,sans-serif; word-break: keep-all; }
+  main { max-inline-size: 39rem; margin: auto; padding: 1.25rem 1rem; }
+  h1 { margin-block: 0; line-height: 1.22; }
+  p { margin-block: .65rem; }
+  canvas { display: block; inline-size: min(100%,30rem); block-size: auto; margin-inline: auto; background: #eeeae1; }
+  canvas.interactive { cursor: pointer; }
+  .controls { display: flex; flex-wrap: wrap; gap: .5rem; margin-block: 1rem; }
+  .controls[hidden] { display: none; }
+  button { min-block-size: 2.75rem; padding: .35rem .65rem; background: #fffdf7; color: inherit; border: 1px solid #4d6065; border-radius: .25rem; font: inherit; }
+  button:disabled { opacity: .55; }
+  button:focus-visible, input:focus-visible { outline: 3px solid #08688c; outline-offset: 3px; }
+  .scrub { display: flex; align-items: center; gap: .5rem; }
+  .scrub[hidden] { display: none; }
+  input { flex: 1; min-inline-size: 1rem; min-block-size: 2.75rem; }
+  #event { min-block-size: 1.55em; font-weight: 620; }
+  small { display: block; }
+</style>
+</head>
+<body>
+<main>
+  <h1>내 바닥은 누군가의 천장입니다.</h1>
+  <p id="help">7층의 공을 떨어뜨리거나 6층 의자를 밀어 보세요. 건물을 돌리면 같은 슬래브 너머에서 듣는 방이 바뀝니다.</p>
+  <canvas id="stage" width="720" height="720" role="img" aria-label="지붕과 7층, 6층, 5층 단면" aria-describedby="help">
+    지붕과 7층, 6층, 5층 단면
+  </canvas>
+  <div class="controls" id="controls" hidden>
+    <button id="drop" type="button">7층 공 떨어뜨리기</button>
+    <button id="chair" type="button">6층 의자 밀기</button>
+    <button id="upper" type="button">7층 기록을 6층에서 듣기</button>
+    <button id="flip" type="button">중력 뒤집기</button>
+    <button id="replay" type="button">6층 의자 기록을 7층에서 듣기</button>
+  </div>
+  <div id="scrub" class="scrub" hidden>
+    <label for="progress">회전 진행률</label>
+    <input id="progress" type="range" min="0" max="100" value="0">
+    <output id="angle" for="progress">0°</output>
+  </div>
+  <p id="event" role="status">7층과 6층에서 충격을 기록할 수 있습니다.</p>
+  <small>쿵 지수는 물리엔진이 계산한 충격의 상대값입니다. 기준 낙하는 100입니다.</small>
+  <noscript><p>물리 장면은 스크립트 실행이 필요합니다.</p></noscript>
+</main>
+<script type="module">
+  import { fixedLoop } from './engine.js';
+  import { createBuilding } from './building.js';
+
+  const $ = id => document.getElementById(id);
+  const stage = $('stage'), ctx = stage.getContext('2d');
+  const building = createBuilding();
+  const size = stage.width;
+  const {width,height} = building;
+  const flashes = new Map();
+  let reduced = false;
+  let priorAngle, wasReady, wasListening, hadChair;
+  $('controls').hidden = $('scrub').hidden = false;
+
+  function indicate(event) {
+    flashes.set(event.slab,event);
+  }
+  building.onThump(event => {
+    if (event.face === 'top') indicate(event);
+  });
+  building.onReceive(event => {
+    indicate(event);
+    const prefix = event.kind === 'replay' ? '재생 · ' : '';
+    $('event').textContent = `${prefix}${event.sourceRoom}층 → ${event.receiverRoom}층 · 쿵 지수 ${event.index}`;
+  });
+
+  function drawBody(body, name, alpha) {
+    const {x,y,angle} = body.pose(alpha);
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.rotate(angle);
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#2c474e';
+    ctx.fillStyle = {ball:'#c7794c',chair:'#a7bab8',cup:'#eed8a5',plant:'#7a9a71',copy:'#fff4cc'}[name];
+    ctx.beginPath();
+    if (body.shape.radius) ctx.arc(0,0,body.shape.radius,0,2*Math.PI);
+    else {
+      for (const [i,p] of body.shape.points.entries()) {
+        if (i === 0) ctx.moveTo(p.x,p.y);
+        else ctx.lineTo(p.x,p.y);
+      }
+      ctx.closePath();
+    }
+    ctx.fill();
+    ctx.stroke();
+    if (name === 'copy') {
+      ctx.fillStyle = '#25373b';
+      ctx.font = '600 13px system-ui';
+      ctx.textAlign = 'center';
+      ctx.fillText(body === building.copyBlocks[0] ? '세 집이 나란히' : '중력을 뒤집으면?',0,5);
+    }
+    ctx.restore();
+  }
+
+  function render(alpha) {
+    ctx.clearRect(0,0,size,size);
+    ctx.save();
+    ctx.translate(size/2,size/2);
+    ctx.rotate(building.angle);
+    ctx.translate(-width/2,-height/2);
+
+    ctx.fillStyle = '#fffdf8';
+    ctx.fillRect(0,0,width,height);
+    ctx.strokeStyle = '#36545c';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(0,0,width,height-11);
+    for (const slab of building.slabs) {
+      ctx.fillStyle = '#36545c';
+      if (slab.below === null) {
+        for (let x=0;x<width;x+=25) ctx.fillRect(x,slab.y-1,16,3);
+      } else ctx.fillRect(0,slab.y-6,width,12);
+      const flash = flashes.get(slab.id);
+      if (!flash) continue;
+      const age = building.world.time-flash.time;
+      const opacity = reduced ? 0.9 : Math.max(0,1-age/0.9);
+      if (!opacity) continue;
+      ctx.save();
+      ctx.globalAlpha = opacity;
+      ctx.strokeStyle = '#a75125';
+      ctx.lineWidth = 1+0.6*Math.log1p(flash.index);
+      ctx.beginPath();
+      ctx.moveTo(Math.max(0,flash.point.x-35),slab.y);
+      ctx.lineTo(Math.min(width,flash.point.x+35),slab.y);
+      ctx.stroke();
+      if (flash.receiverRoom !== null) {
+        ctx.beginPath();
+        const theta = slab.below === flash.receiverRoom ? 0 : Math.PI;
+        ctx.arc(flash.point.x,slab.y,16+(reduced ? 0 : age*86),theta,theta+Math.PI);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    for (const room of building.rooms.values()) {
+      ctx.save();
+      ctx.translate(38,room.top+30);
+      ctx.rotate(-building.angle);
+      ctx.fillStyle = '#385960';
+      ctx.font = '700 26px system-ui';
+      ctx.textAlign = 'center';
+      ctx.fillText(`${room.id}F`,0,8);
+      ctx.restore();
+      if (room.lamp) {
+        const p = room.lamp.pose(alpha), a = building.lampWorld.linkAnchor(room.cable);
+        ctx.strokeStyle = '#385960';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(a.x,a.y);
+        ctx.lineTo(p.x,p.y);
+        ctx.stroke();
+        ctx.fillStyle = '#d79953';
+        ctx.beginPath();
+        ctx.arc(p.x,p.y,room.lamp.shape.radius,0,2*Math.PI);
+        ctx.fill();
+      }
+      for (const [name,body] of Object.entries(room.props)) drawBody(body,name,alpha);
+    }
+    ctx.restore();
+    sync();
+  }
+
+  function sync() {
+    const angle = Math.round(building.angle*180/Math.PI);
+    if (angle !== priorAngle) $('angle').textContent = `${angle}°`;
+    priorAngle = angle;
+    const ready = building.canInput;
+    const listening = building.listening;
+    const chair = building.recordings.chair.length > 0;
+    if (ready !== wasReady) {
+      $('drop').disabled = $('chair').disabled = $('upper').disabled = !ready;
+      stage.classList.toggle('interactive',ready);
+    }
+    if (listening !== wasListening || chair !== hadChair) $('replay').disabled = !(listening && chair);
+    wasReady = ready;
+    wasListening = listening;
+    hadChair = chair;
+  }
+
+  function renderStatic() {
+    if (!reduced) return;
+    for (let i=0;i<420;i++) building.step();
+    render(1);
+  }
+
+  function act(command) {
+    if (building.input(command)) renderStatic();
+  }
+  $('drop').onclick = () => act({type:'dropBall'});
+  $('chair').onclick = () => act({type:'nudgeChair'});
+  function play(kind) {
+    const records = building.recording(kind);
+    if (building.replay(kind,reduced ? records.slice(-1) : records)) renderStatic();
+  }
+  $('upper').onclick = () => play('upper');
+  $('replay').onclick = () => play('chair');
+
+  function rotate(progress) {
+    building.setProgress(progress);
+    $('progress').value = String(Math.round(progress*100));
+    $('flip').textContent = progress >= 0.25 && progress < 0.95 ? '원래대로 돌리기' : '중력 뒤집기';
+    sync();
+    renderStatic();
+  }
+  $('flip').onclick = () => {
+    const reversed = building.progress >= 0.25 && building.progress < 0.95;
+    rotate(reversed ? 0.95 : 0.65);
+  };
+  $('progress').oninput = () => rotate(Number($('progress').value)/100);
+  stage.addEventListener('click',event => {
+    if (!building.canInput) return;
+    const bounds = stage.getBoundingClientRect();
+    const x = (event.clientX-bounds.left)*size/bounds.width-(size-width)/2;
+    const y = (event.clientY-bounds.top)*size/bounds.height-(size-height)/2;
+    if (x < 0 || x > width) return;
+    const upper = building.rooms.get(7), middle = building.rooms.get(6);
+    if (y >= upper.top && y <= upper.bottom) act({type:'dropBall',x});
+    else if (middle.props.chair.contains(x,y)) act({type:'nudgeChair'});
+  });
+
+  fixedLoop(building,stage,render,{dt:building.dt,onReduced(value) {
+    reduced = value;
+    if (value) {
+      building.stopReplay();
+      renderStatic();
+    }
+  }});
+</script>
+</body>
+</html>
