@@ -30,7 +30,7 @@ LT_ESBUILD_BIN=/path/to/esbuild python3 -B arch/build.py --single-file
 - `site/dist/`: 배포용(Cloudflare Pages Direct Upload)
 - `site/dist-single/index.html`: 글꼴까지 넣은 단일 HTML
 
-이 저장소에서 빌드한 `site/dist/`는 공개 데모와 파일 단위로 같습니다(목록 해시 `57d553e0`, v1.0h).
+이 저장소에서 빌드한 `site/dist/`는 공개 데모와 파일 단위로 같습니다(목록 해시 `99f23869`, v1.0i).
 
 ## 검증
 
